@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815330861255",
+    "project_id": "commande-8b46d",
+    "storage_bucket": "commande-8b46d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815330861255:android:6741473630b4a823351ee2",
+        "android_client_info": {
+          "package_name": "mg.management.order"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC4xx_m-KSZNwoFRq13QbG1RgXFmA77vw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

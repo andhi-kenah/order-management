@@ -1,4 +1,4 @@
-package com.commande
+package mg.management.order
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

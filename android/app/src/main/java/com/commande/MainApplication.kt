@@ -1,4 +1,4 @@
-package com.commande
+package mg.management.order
 
 import android.app.Application
 import com.facebook.react.PackageList

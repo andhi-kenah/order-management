@@ -1,0 +1,86 @@
+Pages : {
+    - Connexion
+    - Liste des commandes
+    - Liste des clients
+}
+
+Fonctionnalités par page : {
+    - Connexion : {
+        - Logo
+        - Entree (Adresse & Mot de passe)
+        - Bouton
+        - A propos (version, date de sortie)
+    }
+
+    - Apres Connexion : {
+        -> Bottom-tabs pour la navigation : {
+            - Liste des commandes
+            - Nouvelle commande
+            - Liste des clients
+        }
+    }
+
+    - Liste des commandes : {
+        - En tete : {
+            - Titre = <LOGO> + "Commandes"
+            - Bouton Droite = Parametre
+        }
+        - Contenu : {
+            - Petit calendrier
+            - Entree de recherche
+            - Liste des commandes depuis la base de données (Voir le composant <Commande>) : {
+                - onClick => (<ModalDetail>) Affiche le detail du commande
+            }
+        }
+    }
+
+    - Liste des clients : {
+        - En tete : {
+            - Titre = <LOGO> + "Clients"
+            - Bouton Droite = Parametre
+        }
+        - Contenu : {
+            
+        }
+    }
+}
+
+Composant : {
+    - <Commande> : {
+        - Image (si existe)
+        - Nom du produit
+        - Nom du client
+        - Date de creation
+        - Date de livraison
+        - Nombre = Simplifié
+        - Prix
+    }
+    - <ModalDetail> : {
+        - <Mode edition>
+        - Image (si existe)
+        - Nom du produit
+        - Nom du client
+        - Date de creation
+        - Date de livraison
+        - Nombre = Detaillé : avec un bouton + et - {
+            - Nombre Livré
+            - Nombre Total
+        }
+        - Prix
+    }
+    - <ModalNouveau> : {
+        - Les entrees : {
+            - Image (Image-Picker)
+            - Nom du produit
+            - Nom du client (OPTIONNEL)
+            - Nombre : {
+                - 2 entrees : {
+                    - Bouton[-] Bouton[+] => [Nombre]
+                    - [Detail] (couleur/format/taille) (OPTIONNEL)
+                }
+            }
+            - Prix
+            - Date de livraison (OPTIONNEL)
+        }
+    }
+}
