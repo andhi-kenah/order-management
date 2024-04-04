@@ -3,5 +3,7 @@ export interface color {
     Text: string,
     Primary: string,
     Secondary: string,
+    Danger: string,
+    Success: string,
     ComponentColor: string
 }

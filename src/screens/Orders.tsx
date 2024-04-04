@@ -1,5 +1,11 @@
 import React from 'react';
-import {StatusBar, TouchableHighlight, TouchableOpacity, View, useColorScheme} from 'react-native';
+import {
+  StatusBar,
+  TouchableHighlight,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {DarkColor, LightColor} from 'colors/Colors';
@@ -20,15 +26,26 @@ const Orders = () => {
         headerTitleAlign: 'center',
         headerTintColor: isDark ? DarkColor.Text : LightColor.Text,
         headerBackImage: () => (
-          <Icon
-            name={'chevron-back-circle'}
-            color={
-              useColorScheme() === 'dark'
-                ? DarkColor.Background
-                : LightColor.Background
-            }
-            size={30}
-          />
+          <View
+            style={{
+              backgroundColor: isDark ? DarkColor.Primary : LightColor.Primary,
+              height: 40,
+              width: 40,
+              borderRadius: 50,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Icon
+              name={'chevron-back'}
+              color={
+                useColorScheme() === 'dark'
+                  ? DarkColor.Background
+                  : LightColor.Background
+              }
+              size={26}
+              style={{marginRight: 2}}
+            />
+          </View>
         ),
         headerPressColor: '#2222',
         headerStyle: {
@@ -58,26 +75,16 @@ const Orders = () => {
         options={{
           presentation: 'card',
           cardOverlay: () => (
-            <View style={{backgroundColor: 'grey', flex: 1, opacity: 0.4}} />
+            <View
+              style={{backgroundColor: 'lightgrey', flex: 1, opacity: 0.4}}
+            />
           ),
           cardStyle: {
-            marginTop: StatusBar.currentHeight
-              ? StatusBar.currentHeight + 10
-              : 10,
-            marginBottom: 4,
+            borderRadius: 10,
+            marginTop: 14,
             marginHorizontal: 14,
           },
-          headerTitle: 'Nouvelle commande',
-          headerBackImage: () => (
-            <Icon name={'close-circle'} color={'#f00000'} size={30} />
-          ),
-          headerRight: ({pressColor}) => {
-            return (
-              <TouchableHighlight style={{borderRadius: 50, padding: 4, marginRight: 6}} underlayColor={pressColor} onPress={() => {}}>
-                <Icon name={'checkmark-circle'} size={30} color={'green'} />
-              </TouchableHighlight>
-            );
-          },
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

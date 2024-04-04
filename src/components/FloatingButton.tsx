@@ -1,17 +1,37 @@
 import React from 'react';
-import {TouchableOpacity} from 'react-native';
+import {Text, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { LightColor } from '../colors/Colors';
+import {LightColor} from '../colors/Colors';
 
 type Props = {
-  backgroundColor: string
-  onPress: () => void
+  title?: string;
+  icon: string;
+  backgroundColor: string;
+  onPress: () => void;
 };
 
-const FloatingButton: React.FC<Props> = ({backgroundColor, onPress}) => {
+const FloatingButton: React.FC<Props> = ({
+  title,
+  icon,
+  backgroundColor,
+  onPress,
+}) => {
   return (
-    <TouchableOpacity style={{ backgroundColor, position: 'absolute', bottom: 20, right: 20, borderRadius: 100, padding: 10, elevation: 8}} onPress={onPress}>
-        <Icon name={'add'} size={34} color={LightColor.Background} />
+    <TouchableOpacity
+      style={{
+        backgroundColor,
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 100,
+        padding: 10,
+        elevation: 8,
+      }}
+      onPress={onPress}>
+      {title && <Text style={{color: 'white', fontSize: 16, marginLeft: 8, marginRight: 4}}>{title}</Text>}
+      <Icon name={icon} size={title ? 28 : 34} color={LightColor.Background} />
     </TouchableOpacity>
   );
 };

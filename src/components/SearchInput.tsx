@@ -2,9 +2,20 @@ import React from 'react';
 import {View, TextInput, TouchableOpacity, useColorScheme} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {DarkColor, LightColor} from 'colors/Colors';
-import {Props} from './Props';
 
-const SearchInput: React.FC<Props> = ({title}: Props) => {
+type Props = {
+  title: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  onSubmit?: () => void;
+};
+
+const SearchInput: React.FC<Props> = ({
+  title,
+  value,
+  onChangeText,
+  onSubmit,
+}: Props) => {
   const isDark = useColorScheme() === 'dark';
   return (
     <View
@@ -12,33 +23,43 @@ const SearchInput: React.FC<Props> = ({title}: Props) => {
         flexDirection: 'row',
         alignItems: 'center',
         marginHorizontal: 20,
-        marginVertical: 4
+        marginVertical: 4,
       }}>
-      <View style={{flex: 1}}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: isDark
+            ? DarkColor.ComponentColor
+            : LightColor.ComponentColor,
+          borderRadius: 10,
+          paddingHorizontal: 8,
+        }}>
         <TextInput
           placeholder={title}
+          inputMode="search"
+          value={value}
+          onChangeText={onChangeText}
+          underlineColorAndroid={'transparent'}
           style={{
-            backgroundColor: isDark ? DarkColor.ComponentColor : LightColor.ComponentColor,
+            flex: 1,
             fontSize: 16,
-            borderRadius: 10,
-            paddingHorizontal: 20,
             paddingVertical: 10,
-            marginRight: 4,
+            paddingLeft: 8
           }}
         />
+        <Icon
+          name={'search'}
+          size={20}
+          color={'grey'}
+          style={{marginHorizontal: 6}}
+        />
       </View>
-      <View>
-        <TouchableOpacity
-          style={{
-            backgroundColor: isDark
-              ? DarkColor.Text
-              : LightColor.Text,
-            borderRadius: 50,
-            padding: 8,
-          }}>
-          <Icon name="search" size={18} color={LightColor.Background} />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={{padding: 8, marginRight: -8}}>
+        <Icon name={'funnel'} color={isDark ? DarkColor.Text : LightColor.Text} size={20} />
+      </TouchableOpacity>
     </View>
   );
 };

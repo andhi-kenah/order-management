@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {StatusBar, View, useColorScheme} from 'react-native';
 import {DarkColor, LightColor} from 'colors/Colors';
 
@@ -8,6 +8,8 @@ import SearchInput from 'components/SearchInput';
 const Customers: React.FC = () => {
   const isDark = useColorScheme() === 'dark';
 
+  const [search, setSearch] = useState<string>('');
+
   return (
     <View
       style={{
@@ -16,7 +18,7 @@ const Customers: React.FC = () => {
       }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <Header title={'Clients'} />
-      <SearchInput title={'Rechercher un client'} />
+      <SearchInput title={'Rechercher un client'} value={search} onChangeText={(text) => setSearch(text)} onSubmit={() => {}}/>
     </View>
   )
 }
