@@ -1,8 +1,10 @@
-import type {RouteProp} from '@react-navigation/native';
-import type {StackNavigationProp} from '@react-navigation/stack';
+import {
+  getFocusedRouteNameFromRoute,
+  type RouteProp,
+} from '@react-navigation/native';
 import type {DataType} from 'services/Data';
 
-import React, {memo, useEffect, useRef, useState} from 'react';
+import React, {memo, useEffect, useLayoutEffect, useState} from 'react';
 import {
   Modal,
   ScrollView,
@@ -14,14 +16,19 @@ import {
   useColorScheme,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import firestore from '@react-native-firebase/firestore';
 import {DarkColor, LightColor} from 'colors/Colors';
 import FloatingButton from 'components/FloatingButton';
+import {getDeliveryDate} from 'services/Functions';
+import {StackNavigationProp, StackScreenProps} from '@react-navigation/stack';
 
 type RootStackParamList = {
   OrderList: {item: DataType};
   OrderDetail: {item: DataType};
 };
+
 type Props = {
+  navigation: StackNavigationProp<RootStackParamList, 'OrderDetail'>;
   route: RouteProp<RootStackParamList, 'OrderDetail'>;
 };
 type quantity = {
@@ -29,15 +36,92 @@ type quantity = {
   detail: string;
 };
 
-const OrderDetail: React.FC<Props> = ({route}) => {
+const OrderDetail = ({route, navigation}: Props) => {
   const isDark = useColorScheme() === 'dark';
   const {item} = route.params;
 
+  navigation.setOptions({
+    headerRight: () => {
+      return (
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: isEdit
+              ? isDark
+                ? DarkColor.Primary
+                : LightColor.Primary
+              : 'white',
+            borderWidth: 1,
+            borderColor: isEdit ? '#8888' : 'transparent',
+            borderRadius: 4,
+            paddingVertical: 4,
+            paddingLeft: 10,
+            paddingRight: 6,
+            marginRight: 10,
+            elevation: 1,
+            zIndex: 100,
+          }}
+          onPress={handleEdit}>
+          <Text
+            style={{
+              color: isEdit
+                ? isDark
+                  ? DarkColor.Background
+                  : LightColor.Background
+                : isDark
+                ? DarkColor.Text
+                : LightColor.Text,
+              marginRight: 6,
+            }}>
+            {isEdit ? 'APPLIQUER' : 'MODIFIER'}
+          </Text>
+          <Icon
+            name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
+            color={
+              isEdit
+                ? isDark
+                  ? DarkColor.Background
+                  : LightColor.Background
+                : isDark
+                ? DarkColor.Text
+                : LightColor.Text
+            }
+            size={24}
+          />
+        </TouchableOpacity>
+      );
+    },
+  });
+
   const [isChange, setChange] = useState<boolean>(false);
-  const editQuantityDone = useRef<quantity[]>(item.done);
+  const [editDone, setEditDone] = useState<number[]>(
+    Array.from({length: item.done.length}, () => 0),
+  );
 
   const [isEdit, setEdit] = useState<boolean>(false);
   const [fullScreen, setFullScreen] = useState<boolean>(false);
+
+  const handleChange = async () => {
+    let newDone: quantity[] = [];
+    if (newDone) {
+      for (let n in editDone) {
+        let d: quantity = {
+          number: editDone[n] + item.done[n].number,
+          detail: item.done[n].detail,
+        };
+        newDone = [...newDone, d];
+      }
+    }
+
+    setEditDone(Array.from({length: item.done.length}, () => 0));
+    setChange(false);
+    item.done = newDone;
+
+    await firestore().collection('orders').doc(item.key).update({
+      done: newDone,
+    });
+  };
 
   const handleEdit = () => {
     if (isEdit) {
@@ -47,45 +131,52 @@ const OrderDetail: React.FC<Props> = ({route}) => {
     }
   };
 
+  const handleDelete = () => {
+    firestore().collection('orders').doc(item.key).delete();
+  };
+
   useEffect(() => {
-    console.log(editQuantityDone.current);
-    
-    // if (editQuantityDone.current === item.done) {
-    //   setChange(false);
-    //   console.log('====================================');
-    //   console.log('true');
-    //   console.log(editQuantityDone);
-    //   console.log(item.done);
-    //   console.log('====================================');
-    // } else {
-    //   setChange(true);
-    //   console.log('====================================');
-    //   console.log('false');
-    //   console.log(editQuantityDone);
-    //   console.log(item.done);
-    //   console.log('====================================');
-    // }
-  }, []);
+    let change = 0;
+    for (let i = 0; i < editDone.length; i++) {
+      if (editDone[i] !== 0) {
+        change += 1;
+      } else {
+        change += 0;
+      }
+    }
+    if (change) {
+      setChange(true);
+    } else {
+      setChange(false);
+    }
+  }, [editDone]);
 
   const ItemNumber = memo(
     ({id, quantity, done}: {id: number; quantity: quantity; done: number}) => {
-      const [number, setNumber] = useState<number>(0);
       const decrement = () => {
-        setNumber(prev => (prev -= 1));
-        const updatedAreas = JSON.parse(
-          JSON.stringify(editQuantityDone.current),
-        );
-        updatedAreas[id]['number'] -= 1;
-        editQuantityDone.current = updatedAreas;
+        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        updatedAreas[id] -= 1;
+        setEditDone(updatedAreas);
       };
 
       const increment = () => {
-        setNumber(prev => (prev += 1));
-        const updatedAreas = JSON.parse(
-          JSON.stringify(editQuantityDone.current),
-        );
-        updatedAreas[id]['number'] += 1;
-        editQuantityDone.current = updatedAreas;
+        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        updatedAreas[id] += 1;
+        setEditDone(updatedAreas);
+      };
+
+      const incrementTen = () => {
+        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        if (
+          item.done[id].number + editDone[id] + 10 <=
+          item.quantity[id].number
+        ) {
+          updatedAreas[id] += 10;
+          setEditDone(updatedAreas);
+        } else {
+          updatedAreas[id] = item.quantity[id].number;
+          setEditDone(updatedAreas);
+        }
       };
 
       return (
@@ -117,7 +208,9 @@ const OrderDetail: React.FC<Props> = ({route}) => {
                 {done}
               </Text>
               <Text>
-                {!number ? '' : (number > 0 ? '+' : '') + number.toString()}
+                {editDone[id] === 0
+                  ? ''
+                  : (editDone[id] > 0 ? '+' : '') + editDone[id].toString()}
               </Text>
               <Text
                 style={{
@@ -167,7 +260,7 @@ const OrderDetail: React.FC<Props> = ({route}) => {
             }}>
             {!isEdit && (
               <TouchableOpacity
-                disabled={done + number === 0}
+                disabled={done + editDone[id] === 0}
                 style={{
                   backgroundColor: '#e0e0e088',
                   borderRadius: 4,
@@ -183,13 +276,16 @@ const OrderDetail: React.FC<Props> = ({route}) => {
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              disabled={!isEdit ? done + number === quantity.number : false}
+              disabled={
+                !isEdit ? done + editDone[id] === quantity.number : false
+              }
               style={{
                 backgroundColor: '#e0e0e088',
                 borderRadius: 4,
                 padding: 4,
               }}
-              onPress={increment}>
+              onPress={increment}
+              onLongPress={incrementTen}>
               <Icon
                 name={!isEdit ? 'add-circle-outline' : 'close-circle-outline'}
                 size={28}
@@ -212,72 +308,18 @@ const OrderDetail: React.FC<Props> = ({route}) => {
 
   return (
     <View style={{flex: 1}}>
-      <TouchableOpacity
-        style={{
-          position: 'absolute',
-          top: 12,
-          right: 10,
-          backgroundColor: isEdit
-            ? isDark
-              ? DarkColor.Background
-              : LightColor.Background
-            : isDark
-            ? DarkColor.Primary
-            : LightColor.Primary,
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderWidth: 1,
-          borderColor: isEdit ? '#8888' : 'transparent',
-          borderRadius: 4,
-          paddingVertical: 4,
-          paddingLeft: 10,
-          paddingRight: 6,
-          zIndex: 100,
-        }}
-        onPress={handleEdit}>
-        <Text
-          style={{
-            color: isEdit
-              ? isDark
-                ? DarkColor.Text
-                : LightColor.Text
-              : isDark
-              ? DarkColor.Background
-              : LightColor.Background,
-            marginRight: 6,
-          }}>
-          {isEdit ? 'APPLIQUER' : 'MODIFIER'}
-        </Text>
-        <Icon
-          name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
-          color={
-            isEdit
-              ? isDark
-                ? DarkColor.Text
-                : LightColor.Text
-              : isDark
-              ? DarkColor.Background
-              : LightColor.Background
-          }
-          size={24}
-        />
-      </TouchableOpacity>
       <ScrollView
         style={{
           backgroundColor: isDark
             ? DarkColor.Background
             : LightColor.Background,
         }}>
-        <StatusBar
-          barStyle={'light-content'}
-          backgroundColor={isDark ? DarkColor.Primary : LightColor.Primary}
-        />
         <View
           style={{
-            height: item.hasImage ? 280 : 56,
+            height: item.hasImage ? 280 : 10,
             backgroundColor: isDark
-              ? DarkColor.ComponentColor
-              : LightColor.Primary,
+              ? DarkColor.Background
+              : LightColor.Background,
           }}>
           {item.hasImage && (
             <TouchableOpacity
@@ -303,7 +345,9 @@ const OrderDetail: React.FC<Props> = ({route}) => {
               borderWidth: 1,
               borderColor: isEdit ? '#5552' : 'transparent',
               borderRadius: 4,
-              paddingBottom: 2,
+              paddingTop: 0,
+              paddingBottom: 0,
+              marginVertical: 6,
             }}
           />
 
@@ -327,21 +371,25 @@ const OrderDetail: React.FC<Props> = ({route}) => {
                 paddingHorizontal: 8,
               }}
             />
-            <Text>{'-'}</Text>
+            <Text>-</Text>
             <TextInput
-              editable={isEdit}
-              autoCorrect={false}
-              defaultValue={item.price.toLocaleString()}
-              onChangeText={text => (item.price = parseInt(text))}
-              style={{
-                textAlign: 'left',
-                padding: 0,
-                borderWidth: 1,
-                borderColor: isEdit ? 'lightgrey' : 'transparent',
-                borderRadius: 4,
-                paddingHorizontal: 8,
-              }}
-            />
+                editable={isEdit}
+                autoCorrect={false}
+                defaultValue={
+                  isEdit
+                    ? item.price.toString()
+                    : (item.price / 1000).toString() + 'K'
+                }
+                onChangeText={text => (item.price = parseInt(text))}
+                style={{
+                  textAlign: 'left',
+                  padding: 0,
+                  borderWidth: 1,
+                  borderColor: isEdit ? 'lightgrey' : 'transparent',
+                  borderRadius: 4,
+                  paddingHorizontal: 8,
+                }}
+              />
           </View>
 
           <View
@@ -361,7 +409,7 @@ const OrderDetail: React.FC<Props> = ({route}) => {
                 alignItems: 'center',
               }}>
               <Icon
-                name={'list-outline'}
+                name={'grid-outline'}
                 size={24}
                 color={isDark ? DarkColor.Text : LightColor.Text}
               />
@@ -409,7 +457,11 @@ const OrderDetail: React.FC<Props> = ({route}) => {
             </Text>
             <TextInput
               editable={isEdit}
-              defaultValue={item.delivery}
+              defaultValue={
+                isEdit
+                  ? item.delivery
+                  : getDeliveryDate(item.delivery, 'full-date')
+              }
               onChangeText={text => (item.delivery = text)}
               style={{
                 borderWidth: 1,
@@ -428,7 +480,7 @@ const OrderDetail: React.FC<Props> = ({route}) => {
                 alignItems: 'center',
               }}>
               <Icon
-                name={'text-outline'}
+                name={'chatbox-ellipses-outline'}
                 size={24}
                 color={isDark ? DarkColor.Text : LightColor.Text}
               />
@@ -444,7 +496,7 @@ const OrderDetail: React.FC<Props> = ({route}) => {
             </View>
             <TextInput
               multiline={true}
-              value={item.description}
+              defaultValue={item.description}
               autoCorrect={false}
               keyboardAppearance={isDark ? 'dark' : 'light'}
               editable={isEdit}
@@ -462,12 +514,27 @@ const OrderDetail: React.FC<Props> = ({route}) => {
         {isEdit && (
           <View
             style={{
-              flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 10,
               marginVertical: 30,
             }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: isDark ? DarkColor.Danger : LightColor.Danger,
+                borderRadius: 4,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                elevation: 2,
+              }}
+              onPress={handleDelete}>
+              <Icon name={'trash'} color={'white'} size={18} />
+              <Text style={{fontSize: 16, color: 'white', marginLeft: 10}}>
+                Supprimer la commande
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={{
                 flexDirection: 'row',
@@ -478,26 +545,11 @@ const OrderDetail: React.FC<Props> = ({route}) => {
                 borderRadius: 4,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
-                elevation: 4,
+                elevation: 2,
               }}>
               <Icon name={'checkmark-done'} color={'white'} size={18} />
               <Text style={{fontSize: 16, color: 'white', marginLeft: 10}}>
-                Terminer
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: isDark ? DarkColor.Danger : LightColor.Danger,
-                borderRadius: 4,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                elevation: 4,
-              }}>
-              <Icon name={'trash'} color={'white'} size={18} />
-              <Text style={{fontSize: 16, color: 'white', marginLeft: 10}}>
-                Supprimer
+                Terminer la commande
               </Text>
             </TouchableOpacity>
           </View>
@@ -539,7 +591,7 @@ const OrderDetail: React.FC<Props> = ({route}) => {
         <FloatingButton
           icon={'save'}
           backgroundColor={isDark ? DarkColor.Success : LightColor.Success}
-          onPress={() => {}}
+          onPress={handleChange}
         />
       )}
     </View>

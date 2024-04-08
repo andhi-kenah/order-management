@@ -1,3 +1,4 @@
+import type {StackNavigationProp} from '@react-navigation/stack';
 import type {DataType} from 'services/Data';
 import React, {useState} from 'react';
 import {
@@ -14,7 +15,18 @@ import firestore from '@react-native-firebase/firestore';
 import {DarkColor, LightColor} from 'colors/Colors';
 import Header from 'components/Header';
 
-const NewOrder: React.FC = () => {
+type OrderStackParamList = {
+  OrderList: undefined;
+  OrderDetail: {item: DataType};
+  NewOrder: undefined;
+};
+type NavigationProps = StackNavigationProp<OrderStackParamList, 'OrderList'>;
+
+type Prop = {
+  navigation: NavigationProps;
+};
+
+const NewOrder: React.FC<Prop> = ({navigation}) => {
   const isDark = useColorScheme() === 'dark';
 
   const [name, setName] = useState('');
@@ -28,39 +40,32 @@ const NewOrder: React.FC = () => {
   const [hasImage, setHasImage] = useState(false);
   const [image, setImage] = useState('');
   const [price, setPrice] = useState('');
-  const [delivery, setDelivery] = useState('')
+  const [delivery, setDelivery] = useState('');
   const [description, setDescription] = useState('');
 
   let [numberInput, setNumberInput] = useState<number[]>([Date.now()]);
 
-  const handleSubmit = async () => {
-    // console.log('name : ' + name);
-    // console.log('customer : ' + customer);
-    // console.log('quantity : ');
-    // console.log(quantity);
-    // console.log('done : ');
-    // console.log(done);
-    // console.log('hasImage : ' + hasImage);
-    // console.log('image : ' + image);
-    // console.log('price : ' + price);
-    // console.log('description : ' + description);
-    // console.log('delivery : ' + delivery);
-
-    await firestore()
-      .collection('orders')
-      .add({
-        name: name.trim(),
-        customer: customer.trim(),
-        quantity,
-        done,
-        hasImage,
-        image,
-        price: parseInt(price),
-        description,
-        delivery,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
-    console.log('Sent');
+  const handleSubmit = () => {
+    try {
+      firestore()
+        .collection('orders')
+        .add({
+          name: name.trim(),
+          customer: customer.trim(),
+          quantity,
+          done,
+          hasImage,
+          image,
+          price: isNaN(parseInt(price.trim())) ? 0 : parseInt(price),
+          description: description.trim(),
+          delivery: delivery.trim(),
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        });
+        
+      navigation.goBack();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const addNewNumber = (): React.ReactNode => {
@@ -94,15 +99,24 @@ const NewOrder: React.FC = () => {
               placeholder={'Detail'}
               style={[styles.input]}
               onChangeText={text => {
-                quantity[index].detail = text;
-                done[index].detail = text;
+                quantity[index].detail = text.trim();
+                done[index].detail = text.trim();
               }}
             />
           </View>
           <View style={{flex: 1, alignItems: 'center'}}>
             <TouchableHighlight
               disabled={quantity.length === 1}
-              style={{backgroundColor: quantity.length === 1 ? 'lightgrey' : isDark ? DarkColor.Danger : LightColor.Danger, borderRadius: 50, marginLeft: 4}}
+              style={{
+                backgroundColor:
+                  quantity.length === 1
+                    ? 'lightgrey'
+                    : isDark
+                    ? DarkColor.Danger
+                    : LightColor.Danger,
+                borderRadius: 50,
+                marginLeft: 4,
+              }}
               onPress={() => {
                 removeInmput(key, index);
               }}>
@@ -120,7 +134,9 @@ const NewOrder: React.FC = () => {
         flex: 1,
         backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
       }}>
-      <Header title={'Nouvelle commande'} />
+      <Text style={{fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginTop: 20, marginBottom: 10}}>
+        Nouvelle commande
+      </Text>
       <ScrollView
         keyboardShouldPersistTaps={'handled'}
         keyboardDismissMode={'none'}
@@ -130,7 +146,7 @@ const NewOrder: React.FC = () => {
             ? DarkColor.Background
             : LightColor.Background,
           paddingHorizontal: 14,
-          marginTop: 10
+          marginTop: 10,
         }}>
         <View style={{marginBottom: 6}}>
           <TextInput
@@ -153,7 +169,12 @@ const NewOrder: React.FC = () => {
           <TouchableHighlight
             disabled={quantity.length > 9}
             style={{
-              backgroundColor: quantity.length > 9 ? 'lightgrey' : isDark ? DarkColor.Primary : LightColor.Primary,
+              backgroundColor:
+                quantity.length > 9
+                  ? 'lightgrey'
+                  : isDark
+                  ? DarkColor.Primary
+                  : LightColor.Primary,
               borderRadius: 4,
               paddingHorizontal: 10,
               margin: 'auto',
@@ -200,7 +221,7 @@ const NewOrder: React.FC = () => {
             borderRadius: 4,
             paddingVertical: 8,
             paddingHorizontal: 10,
-            marginTop: 10
+            marginTop: 10,
           }}
           onPress={handleSubmit}>
           <Text
@@ -213,7 +234,7 @@ const NewOrder: React.FC = () => {
             Ajouter
           </Text>
         </TouchableHighlight>
-        <View style={{height: 50}}/>
+        <View style={{height: 50}} />
       </ScrollView>
     </View>
   );
@@ -227,6 +248,6 @@ const styles = StyleSheet.create({
     borderColor: 'lightgrey',
     width: '100%',
     borderRadius: 4,
-    paddingHorizontal: 4,
+    paddingHorizontal: 10,
   },
 });

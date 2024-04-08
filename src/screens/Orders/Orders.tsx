@@ -18,6 +18,7 @@ import Header from '../../components/Header';
 import SearchInput from '../../components/SearchInput';
 import FloatingButton from 'components/FloatingButton';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {getDeliveryDate} from 'services/Functions';
 
 type OrderStackParamList = {
   OrderList: undefined;
@@ -66,7 +67,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
   }, []);
 
   const handleSearch = (text: string) => {
-    if (!text || text.length === 1) {
+    if (!text && text.length === 0) {
       setSearch('');
       setSearchMode(false);
     } else {
@@ -77,40 +78,60 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
     setSearch(text);
     setSearchResult(
       items?.filter(value => {
-        return value.name.toLowerCase().includes(search.toLowerCase());
+        return value.name.toLowerCase().includes(text.toLowerCase());
       }),
     );
     setIsLoading(false);
   };
 
-  const RenderItem = ({data}: {data: DataType}) => {
-    const getDelivery = () => {
-      if (data.delivery) {
-        const months = [
-          'Jan',
-          'Fev',
-          'Mars',
-          'Avr',
-          'Mai',
-          'Juin',
-          'Juil',
-          'Aou',
-          'Sept',
-          'Oct',
-          'Nov',
-          'Dec',
-        ];
-        const date = new Date(data.delivery.split('/').reverse().join('-'));
-        return date.getDate().toString() + ' ' + months[date.getMonth()];
-      }
-      return '';
-    };
+  const EmptyList = () => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: search ? 'flex-start' : 'center',
+          padding: search ? 10 : 20,
+        }}>
+        {searchMode ? (
+          <View>
+            <Text
+              style={{
+                color: isDark ? DarkColor.Secondary : LightColor.Secondary,
+                textAlign: 'center',
+              }}>
+              Il n'y a pas de "{search}" dans la liste de commande
+            </Text>
+          </View>
+        ) : (
+          <>
+            <Icon
+              name={'apps'}
+              color={isDark ? DarkColor.Secondary : LightColor.Secondary}
+              size={70}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                color: isDark ? DarkColor.Secondary : LightColor.Secondary,
+                textAlign: 'center',
+                marginTop: 30,
+              }}>
+              Cliquer sur le bouton <Icon name={'add-circle'} size={20} /> pour
+              ajouter un commande
+            </Text>
+          </>
+        )}
+      </View>
+    );
+  };
 
+  const RenderItem = ({data}: {data: DataType}) => {
     const getDone = (): number => {
       if (data.done) {
         let done = 0;
         for (let n of data.done) {
-          done += parseInt(n.number.toString() ? '0' : n.number.toString());
+          done += n.number;
         }
         return done;
       }
@@ -128,16 +149,24 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
       return 0;
     };
 
+    const setBackgroundColor = (): string => {
+      if (getDone() === getTotal()) {
+        return '#ebffeb';
+      } else {
+        return isDark ? DarkColor.Secondary : LightColor.Background;
+      }
+    };
+
     return (
       <TouchableOpacity
         style={{
-          backgroundColor: isDark ? DarkColor.Secondary : LightColor.Background,
+          backgroundColor: setBackgroundColor(),
           flex: 1,
           flexDirection: 'row',
           justifyContent: 'space-between',
           borderRadius: 8,
           marginVertical: 6,
-          marginHorizontal: 20,
+          marginHorizontal: 18,
           overflow: 'hidden',
           elevation: 2,
         }}
@@ -145,7 +174,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
         <View style={{flex: 2, flexDirection: 'row', alignItems: 'center'}}>
           <View
             style={{
-              height: 70,
+              height: '100%',
               width: 60,
               backgroundColor: isDark
                 ? DarkColor.ComponentColor
@@ -155,7 +184,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             <Text
               style={{fontSize: 15, fontWeight: 'bold'}}
               ellipsizeMode="tail"
-              numberOfLines={1}>
+              numberOfLines={2}>
               {data.name}
             </Text>
             <Text
@@ -168,7 +197,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               {data.customer}
               <Text style={{color: 'lightgrey'}}>
                 {' - '}
-                {getDelivery()}
+                {getDeliveryDate(data.delivery)}
               </Text>
             </Text>
           </View>
@@ -207,12 +236,13 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
         flex: 1,
         backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
       }}>
-      <Header title={'Commandes'} />
-      <SearchInput
-                title={'Rechercher un produit'}
-                value={search}
-                onChangeText={text => handleSearch(text)}
-              />
+      <Header
+        title={'Commandes'}
+        searchTitle={'Rechercher un produit'}
+        searchValue={search}
+        onPressSearchButton={() => {setSearchMode(false); setSearch('')}}
+        onChangeText={handleSearch}
+      />
       {isLoading ? (
         <View
           style={{
@@ -223,7 +253,10 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               ? DarkColor.Background
               : LightColor.Background,
           }}>
-          <ActivityIndicator size={'small'} color={isDark ? DarkColor.Primary : LightColor.Primary} />
+          <ActivityIndicator
+            size={'large'}
+            color={isDark ? DarkColor.Primary : LightColor.Primary}
+          />
         </View>
       ) : (
         <>
@@ -233,37 +266,13 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               <RenderItem data={item} key={item.key} />
             )}
             keyExtractor={item => item.key}
-            style={{marginTop: 10}}
+            style={{marginTop: 4}}
             contentContainerStyle={{flexGrow: 1}}
             keyboardShouldPersistTaps={'handled'}
             keyboardDismissMode={'on-drag'}
             ListHeaderComponentStyle={{marginBottom: 10}}
             ListFooterComponent={<View style={{height: 80}} />}
-            ListEmptyComponent={
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 20,
-                }}>
-                <Icon
-                  name={'apps'}
-                  color={isDark ? DarkColor.Secondary : LightColor.Secondary}
-                  size={70}
-                />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: isDark ? DarkColor.Secondary : LightColor.Secondary,
-                    textAlign: 'center',
-                    marginTop: 30,
-                  }}>
-                  Cliquer sur le bouton <Icon name={'add-circle'} size={20} />{' '}
-                  pour ajouter un commande
-                </Text>
-              </View>
-            }
+            ListEmptyComponent={<EmptyList />}
           />
           <FloatingButton
             icon={'add'}
