@@ -35,6 +35,7 @@ const OrderDetail = ({route, navigation}: Props) => {
   const {item} = route.params;
 
     navigation.setOptions({
+      headerTransparent: item.hasImage ? true : false,
       headerRight: () => {
         return (
           <TouchableOpacity
@@ -184,7 +185,9 @@ const OrderDetail = ({route, navigation}: Props) => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: isDark
+                backgroundColor: done >= quantity.number ?
+                '#e4f3e4' :
+                isDark
                   ? DarkColor.ComponentColor
                   : LightColor.ComponentColor,
                 borderRadius: 4,
@@ -254,7 +257,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               <TouchableOpacity
                 disabled={done + editDone[id] === 0}
                 style={{
-                  backgroundColor: '#e0e0e088',
+                  backgroundColor: isDark ? DarkColor.Secondary : LightColor.Secondary,
                   borderRadius: 4,
                   padding: 4,
                   marginHorizontal: 8,
@@ -263,7 +266,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 <Icon
                   name={'remove-circle-outline'}
                   size={28}
-                  color={isDark ? DarkColor.Secondary : LightColor.Secondary}
+                  color={isDark ? DarkColor.Background : LightColor.Background}
                 />
               </TouchableOpacity>
             )}
@@ -272,7 +275,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 !isEdit ? done + editDone[id] === quantity.number : false
               }
               style={{
-                backgroundColor: '#e0e0e088',
+                backgroundColor: !isEdit ? isDark ? DarkColor.Primary : LightColor.Primary : isDark ? DarkColor.ComponentColor : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 4,
               }}
@@ -284,8 +287,8 @@ const OrderDetail = ({route, navigation}: Props) => {
                 color={
                   !isEdit
                     ? isDark
-                      ? DarkColor.Primary
-                      : LightColor.Primary
+                      ? DarkColor.Background
+                      : LightColor.Background
                     : isDark
                     ? DarkColor.Danger
                     : LightColor.Danger
