@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {DarkColor, LightColor} from '../../colors/Colors';
 import Header from '../../components/Header';
 import FloatingButton from 'components/FloatingButton';
-import {getDeliveryDate, getTotal} from '../../services/Functions';
+import {getDeliveryDate, getDone, getTotal} from '../../services/Functions';
 
 type OrderStackParamList = {
   OrderList: undefined;
@@ -126,20 +126,9 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
   };
 
   const RenderItem = ({data}: {data: DataType}) => {
-    const getDone = (): number => {
-      if (data.done) {
-        let done = 0;
-        for (let n of data.done) {
-          done += n.number;
-        }
-        return done;
-      }
-      return 0;
-    };
-
     const setBackgroundColor = (): string => {
-      if (getDone() === getTotal(data.quantity)) {
-        return '#ebffeb';
+      if (getDone(data.done) === getTotal(data.quantity)) {
+        return '#f1fcf1';
       } else {
         return isDark ? DarkColor.Secondary : LightColor.Background;
       }
@@ -200,7 +189,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             style={{
               fontWeight: 'bold',
               color:
-                getDone() == getTotal(data.quantity)
+                getDone(data.done) == getTotal(data.quantity)
                   ? 'green'
                   : isDark
                   ? DarkColor.Primary
@@ -211,7 +200,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               borderRadius: 4,
               padding: 8,
             }}>
-            {getDone()}/{getTotal(data.quantity)}
+            {getDone(data.done)}/{getTotal(data.quantity)}
           </Text>
         </View>
       </TouchableOpacity>
