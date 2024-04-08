@@ -2,7 +2,7 @@ import type {RouteProp} from '@react-navigation/native';
 import type {StackNavigationProp} from '@react-navigation/stack';
 import type {DataType, quantity} from '../../Data';
 
-import React, {memo, useEffect, useLayoutEffect, useState} from 'react';
+import React, {memo, useEffect, useState} from 'react';
 import {
   Modal,
   ScrollView,
@@ -584,6 +584,7 @@ const OrderDetail = ({route, navigation}: Props) => {
       </ScrollView>
       {isChange && !isEdit && (
         <FloatingButton
+          title={'Enregister'}
           icon={'save'}
           backgroundColor={isDark ? DarkColor.Success : LightColor.Success}
           onPress={handleChange}
