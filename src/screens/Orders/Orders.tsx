@@ -136,6 +136,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
 
     return (
       <TouchableOpacity
+        activeOpacity={0.8}
         style={{
           backgroundColor: setBackgroundColor(),
           flex: 1,
@@ -159,7 +160,12 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             }}></View>
           <View style={{flex: 1, padding: 10}}>
             <Text
-              style={{fontSize: 15, fontWeight: 'bold'}}
+              style={{
+                color: isDark ? DarkColor.Text : LightColor.Text,
+                fontSize: 15,
+                // fontWeight: 'bold',
+                fontFamily: 'sans-serif-medium',
+              }}
               ellipsizeMode="tail"
               numberOfLines={2}>
               {data.name}
@@ -167,12 +173,13 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             <Text
               style={{
                 fontSize: 14,
-                color: isDark ? DarkColor.Text : LightColor.Text,
+                fontFamily: 'sans-serif-light',
+                color: 'grey'
               }}
               ellipsizeMode="tail"
               numberOfLines={1}>
               {data.customer}
-              <Text style={{color: 'lightgrey'}}>
+              <Text style={{color: 'lightgrey', fontFamily: 'sans-serif-thin'}}>
                 {' - '}
                 {getDeliveryDate(data.delivery)}
               </Text>
@@ -217,7 +224,10 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
         title={'Commandes'}
         searchTitle={'Rechercher un produit'}
         searchValue={search}
-        onPressSearchButton={() => {setSearchMode(false); setSearch('')}}
+        onPressSearchButton={() => {
+          setSearchMode(false);
+          setSearch('');
+        }}
         onChangeText={handleSearch}
       />
       {isLoading ? (

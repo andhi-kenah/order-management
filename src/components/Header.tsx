@@ -70,6 +70,7 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
         style={{
           fontSize: 22,
           fontWeight: 'bold',
+          fontFamily: 'sans-serif-light',
           color: isDark ? 'white' : 'black',
         }}>
         {title}
@@ -86,8 +87,8 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
               backgroundColor: isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
-              height: 34,
-              width: 34,
+              height: 38,
+              width: 38,
               borderRadius: 50,
               alignItems: 'center',
               justifyContent: 'center'
@@ -106,8 +107,8 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
               backgroundColor: isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
-              height: 34,
-              width: 34,
+              height: 38,
+              width: 38,
               borderRadius: 50,
               alignItems: 'center',
               justifyContent: 'center',
