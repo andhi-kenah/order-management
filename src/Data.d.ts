@@ -10,3 +10,8 @@ export interface DataType {
   description: string,
   delivery: string,
 }
+
+export type quantity = {
+  number: number;
+  detail: string;
+};
