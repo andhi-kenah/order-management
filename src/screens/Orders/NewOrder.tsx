@@ -13,7 +13,6 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
 import {DarkColor, LightColor} from '../../colors/Colors';
-import Header from 'components/Header';
 
 type OrderStackParamList = {
   OrderList: undefined;
