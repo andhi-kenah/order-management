@@ -1,5 +1,5 @@
 import type {StackNavigationProp} from '@react-navigation/stack';
-import type {DataType} from '../../services/Data';
+import type {DataType} from '../../Data';
 
 import React, {useState} from 'react';
 import {
@@ -12,13 +12,12 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import {DarkColor, LightColor} from '../../colors/Colors';
-
-import Header from '../../components/Header';
-import SearchInput from '../../components/SearchInput';
-import FloatingButton from 'components/FloatingButton';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {getDeliveryDate} from 'services/Functions';
+
+import {DarkColor, LightColor} from '../../colors/Colors';
+import Header from '../../components/Header';
+import FloatingButton from 'components/FloatingButton';
+import {getDeliveryDate, getTotal} from '../../services/Functions';
 
 type OrderStackParamList = {
   OrderList: undefined;
@@ -138,19 +137,8 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
       return 0;
     };
 
-    const getTotal = () => {
-      if (data.quantity) {
-        let total = 0;
-        for (const n of data.quantity) {
-          total += parseInt(n.number.toString());
-        }
-        return total;
-      }
-      return 0;
-    };
-
     const setBackgroundColor = (): string => {
-      if (getDone() === getTotal()) {
+      if (getDone() === getTotal(data.quantity)) {
         return '#ebffeb';
       } else {
         return isDark ? DarkColor.Secondary : LightColor.Background;
@@ -212,7 +200,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             style={{
               fontWeight: 'bold',
               color:
-                getDone() == getTotal()
+                getDone() == getTotal(data.quantity)
                   ? 'green'
                   : isDark
                   ? DarkColor.Primary
@@ -223,7 +211,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               borderRadius: 4,
               padding: 8,
             }}>
-            {getDone()}/{getTotal()}
+            {getDone()}/{getTotal(data.quantity)}
           </Text>
         </View>
       </TouchableOpacity>

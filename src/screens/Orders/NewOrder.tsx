@@ -1,5 +1,5 @@
 import type {StackNavigationProp} from '@react-navigation/stack';
-import type {DataType} from 'services/Data';
+import type {DataType} from '../../Data';
 import React, {useState} from 'react';
 import {
   useColorScheme,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
-import {DarkColor, LightColor} from 'colors/Colors';
+import {DarkColor, LightColor} from '../../colors/Colors';
 import Header from 'components/Header';
 
 type OrderStackParamList = {

@@ -1,8 +1,6 @@
-import {
-  getFocusedRouteNameFromRoute,
-  type RouteProp,
-} from '@react-navigation/native';
-import type {DataType} from 'services/Data';
+import type {RouteProp} from '@react-navigation/native';
+import type {StackNavigationProp} from '@react-navigation/stack';
+import type {DataType, quantity} from '../../Data';
 
 import React, {memo, useEffect, useLayoutEffect, useState} from 'react';
 import {
@@ -17,10 +15,10 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
-import {DarkColor, LightColor} from 'colors/Colors';
-import FloatingButton from 'components/FloatingButton';
-import {getDeliveryDate} from 'services/Functions';
-import {StackNavigationProp, StackScreenProps} from '@react-navigation/stack';
+
+import {DarkColor, LightColor} from '../../colors/Colors';
+import FloatingButton from '../../components/FloatingButton';
+import {getDeliveryDate} from '../../services/Functions';
 
 type RootStackParamList = {
   OrderList: {item: DataType};
@@ -31,68 +29,62 @@ type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'OrderDetail'>;
   route: RouteProp<RootStackParamList, 'OrderDetail'>;
 };
-type quantity = {
-  number: number;
-  detail: string;
-};
 
 const OrderDetail = ({route, navigation}: Props) => {
   const isDark = useColorScheme() === 'dark';
   const {item} = route.params;
 
-  navigation.setOptions({
-    headerRight: () => {
-      return (
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: isEdit
-              ? isDark
-                ? DarkColor.Primary
-                : LightColor.Primary
-              : 'white',
-            borderWidth: 1,
-            borderColor: isEdit ? '#8888' : 'transparent',
-            borderRadius: 4,
-            paddingVertical: 4,
-            paddingLeft: 10,
-            paddingRight: 6,
-            marginRight: 10,
-            elevation: 1,
-            zIndex: 100,
-          }}
-          onPress={handleEdit}>
-          <Text
+    navigation.setOptions({
+      headerRight: () => {
+        return (
+          <TouchableOpacity
             style={{
-              color: isEdit
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: isEdit
                 ? isDark
-                  ? DarkColor.Background
-                  : LightColor.Background
-                : isDark
-                ? DarkColor.Text
-                : LightColor.Text,
-              marginRight: 6,
-            }}>
-            {isEdit ? 'APPLIQUER' : 'MODIFIER'}
-          </Text>
-          <Icon
-            name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
-            color={
-              isEdit
-                ? isDark
-                  ? DarkColor.Background
-                  : LightColor.Background
-                : isDark
-                ? DarkColor.Text
-                : LightColor.Text
-            }
-            size={24}
-          />
-        </TouchableOpacity>
-      );
-    },
-  });
+                  ? DarkColor.Primary
+                  : LightColor.Primary
+                : 'white',
+              borderRadius: 4,
+              paddingVertical: 4,
+              paddingLeft: 10,
+              paddingRight: 6,
+              marginRight: 10,
+              elevation: 1,
+              zIndex: 100,
+            }}
+            onPress={handleEdit}>
+            <Text
+              style={{
+                color: isEdit
+                  ? isDark
+                    ? DarkColor.Background
+                    : LightColor.Background
+                  : isDark
+                  ? DarkColor.Text
+                  : LightColor.Text,
+                marginRight: 6,
+              }}>
+              {isEdit ? 'APPLIQUER' : 'MODIFIER'}
+            </Text>
+            <Icon
+              name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
+              color={
+                isEdit
+                  ? isDark
+                    ? DarkColor.Background
+                    : LightColor.Background
+                  : isDark
+                  ? DarkColor.Text
+                  : LightColor.Text
+              }
+              size={24}
+            />
+          </TouchableOpacity>
+        );
+      },
+    });
 
   const [isChange, setChange] = useState<boolean>(false);
   const [editDone, setEditDone] = useState<number[]>(
@@ -373,23 +365,23 @@ const OrderDetail = ({route, navigation}: Props) => {
             />
             <Text>-</Text>
             <TextInput
-                editable={isEdit}
-                autoCorrect={false}
-                defaultValue={
-                  isEdit
-                    ? item.price.toString()
-                    : (item.price / 1000).toString() + 'K'
-                }
-                onChangeText={text => (item.price = parseInt(text))}
-                style={{
-                  textAlign: 'left',
-                  padding: 0,
-                  borderWidth: 1,
-                  borderColor: isEdit ? 'lightgrey' : 'transparent',
-                  borderRadius: 4,
-                  paddingHorizontal: 8,
-                }}
-              />
+              editable={isEdit}
+              autoCorrect={false}
+              defaultValue={
+                isEdit
+                  ? item.price.toString()
+                  : (item.price / 1000).toString() + 'K'
+              }
+              onChangeText={text => (item.price = parseInt(text))}
+              style={{
+                textAlign: 'left',
+                padding: 0,
+                borderWidth: 1,
+                borderColor: isEdit ? 'lightgrey' : 'transparent',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+              }}
+            />
           </View>
 
           <View

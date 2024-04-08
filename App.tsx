@@ -1,4 +1,4 @@
-import type {DataType} from 'services/Data';
+import type {DataType} from 'Data';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -13,7 +13,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {DarkColor, LightColor} from 'colors/Colors';
 
-import Customers from './src/screens/Customers';
+import Customers from './src/screens/Customers/Customers';
 import Orders from 'screens/Orders/Orders';
 import OrderDetail from 'screens/Orders/OrderDetail';
 import NewOrder from 'screens/Orders/NewOrder';
