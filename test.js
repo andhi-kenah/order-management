@@ -13,4 +13,10 @@ let data = [
     },
 ];
 
-console.log(data.slice(1));
+for (let i = 0; i < data.length; i++) {
+    if (data[i].name.includes('John')) {
+        console.log(data[i].name.includes('John'), 'John');
+    } else {
+        console.log(data[i].name.includes('John'), 'John');
+    }
+}
