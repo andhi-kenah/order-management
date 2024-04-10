@@ -13,9 +13,10 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {DarkColor, LightColor} from 'colors/Colors';
 
-import Customers from './src/screens/Customers/Customers';
+import Customers from 'screens/Customers/Customers';
 import Orders from 'screens/Orders/Orders';
 import OrderDetail from 'screens/Orders/OrderDetail';
+import CustomerDetail from 'screens/Customers/CustomerDetail';
 import NewOrder from 'screens/Orders/NewOrder';
 
 type RootTabParamList = {
@@ -26,7 +27,8 @@ type RootTabParamList = {
 type RootStackParamList = {
   Home: undefined;
   OrderDetail: {item: DataType};
-  NewOrder: undefined;
+  CustomerDetail: {customer: string};
+  NewOrder: {item: string};
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -48,7 +50,7 @@ const HomeTabs = () => {
             : LightColor.Background,
         },
         tabBarLabel: route.name === 'Orders' ? 'Commandes' : 'Clients',
-        tabBarLabelStyle: {fontWeight: 'bold', margin: 4},
+        tabBarLabelStyle: {fontSize: 14, fontWeight: 'normal', margin: 4},
         tabBarLabelPosition: 'below-icon',
         tabBarIcon: ({focused, color, size}) => {
           let iconName = 'home';
@@ -60,7 +62,7 @@ const HomeTabs = () => {
           return (
             <Icon
               name={iconName}
-              size={30}
+              size={32}
               color={color}
               style={{marginBottom: -12}}
             />
@@ -133,7 +135,12 @@ const App = () => {
           <Stack.Screen
             name="OrderDetail"
             component={OrderDetail}
-            options={{headerTitle: ''}}
+            options={{headerTitle: '', headerTransparent: true}}
+          />
+          <Stack.Screen
+            name="CustomerDetail"
+            component={CustomerDetail}
+            options={{headerTitle: '', headerTransparent: true}}
           />
           <Stack.Screen
             name="NewOrder"
@@ -143,12 +150,12 @@ const App = () => {
               headerShown: false,
               cardOverlay: () => (
                 <View
-                  style={{backgroundColor: 'lightgrey', flex: 1, opacity: 0.4}}
+                  style={{backgroundColor: isDark ? '#222' : 'lightgrey', flex: 1, opacity: 0.4}}
                 />
               ),
               cardStyle: {
                 borderRadius: 10,
-                marginTop: StatusBar.currentHeight
+                marginVertical: StatusBar.currentHeight
                   ? StatusBar.currentHeight + 14
                   : 14,
                 marginHorizontal: 14,
