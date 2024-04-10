@@ -25,7 +25,7 @@ const FloatingButton: React.FC<Props> = ({
         right: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 30,
+        borderRadius: 40,
         padding: 10,
         elevation: 4,
       }}

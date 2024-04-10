@@ -1,7 +1,7 @@
 import type {StackNavigationProp} from '@react-navigation/stack';
 import type {DataType} from '../../Data';
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,11 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 import {DarkColor, LightColor} from '../../colors/Colors';
 import Header from '../../components/Header';
 import FloatingButton from 'components/FloatingButton';
+import EmptyList from '../../components/EmptyList';
 import {getDeliveryDate, getDone, getTotal} from '../../services/Functions';
 
 type OrderStackParamList = {
@@ -39,7 +39,8 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
   const [searchMode, setSearchMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setIsLoading(true);
     const subscriber = firestore()
       .collection('orders')
       .orderBy('createdAt', 'desc')
@@ -77,60 +78,18 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
     setSearch(text);
     setSearchResult(
       items?.filter(value => {
-        return value.name.toLowerCase().includes(text.toLowerCase());
+        return value.name.toLowerCase().includes(text.toLowerCase()) || value.customer.toLowerCase().includes(text.toLowerCase());
       }),
     );
     setIsLoading(false);
   };
 
-  const EmptyList = () => {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: search ? 'flex-start' : 'center',
-          padding: search ? 10 : 20,
-        }}>
-        {searchMode ? (
-          <View>
-            <Text
-              style={{
-                color: isDark ? DarkColor.Secondary : LightColor.Secondary,
-                textAlign: 'center',
-              }}>
-              Il n'y a pas de "{search}" dans la liste de commande
-            </Text>
-          </View>
-        ) : (
-          <>
-            <Icon
-              name={'apps'}
-              color={isDark ? DarkColor.Secondary : LightColor.Secondary}
-              size={70}
-            />
-            <Text
-              style={{
-                fontSize: 16,
-                color: isDark ? DarkColor.Secondary : LightColor.Secondary,
-                textAlign: 'center',
-                marginTop: 30,
-              }}>
-              Cliquer sur le bouton <Icon name={'add-circle'} size={20} /> pour
-              ajouter un commande
-            </Text>
-          </>
-        )}
-      </View>
-    );
-  };
-
   const RenderItem = ({data}: {data: DataType}) => {
     const setBackgroundColor = (): string => {
       if (getDone(data.done) === getTotal(data.quantity)) {
-        return '#f1fcf1';
+        return isDark ? '#232425' : '#f1fcf1';
       } else {
-        return isDark ? DarkColor.Secondary : LightColor.Background;
+        return isDark ? DarkColor.ComponentColor : LightColor.Background;
       }
     };
 
@@ -153,17 +112,16 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
           <View
             style={{
               height: '100%',
-              width: 60,
+              width: 70,
               backgroundColor: isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
             }}></View>
-          <View style={{flex: 1, padding: 10}}>
+          <View style={{flex: 1, paddingVertical: 16, paddingHorizontal: 12}}>
             <Text
               style={{
                 color: isDark ? DarkColor.Text : LightColor.Text,
-                fontSize: 15,
-                // fontWeight: 'bold',
+                fontSize: 16,
                 fontFamily: 'sans-serif-medium',
               }}
               ellipsizeMode="tail"
@@ -174,7 +132,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
               style={{
                 fontSize: 14,
                 fontFamily: 'sans-serif-light',
-                color: 'grey'
+                color: isDark ? DarkColor.Text : LightColor.Text
               }}
               ellipsizeMode="tail"
               numberOfLines={1}>
@@ -229,6 +187,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
           setSearch('');
         }}
         onChangeText={handleSearch}
+        hasFilter={true}
       />
       {isLoading ? (
         <View
@@ -259,7 +218,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
             keyboardDismissMode={'on-drag'}
             ListHeaderComponentStyle={{marginBottom: 10}}
             ListFooterComponent={<View style={{height: 80}} />}
-            ListEmptyComponent={<EmptyList />}
+            ListEmptyComponent={<EmptyList searchMode={searchMode} searchValue={search} />}
           />
           <FloatingButton
             icon={'add'}

@@ -4,6 +4,7 @@ import type {DataType, quantity} from '../../Data';
 
 import React, {memo, useEffect, useState} from 'react';
 import {
+  Image,
   Modal,
   ScrollView,
   StatusBar,
@@ -34,58 +35,62 @@ const OrderDetail = ({route, navigation}: Props) => {
   const isDark = useColorScheme() === 'dark';
   const {item} = route.params;
 
-    navigation.setOptions({
-      headerTransparent: item.hasImage ? true : false,
-      headerRight: () => {
-        return (
-          <TouchableOpacity
+  // console.log(item);
+  
+
+  navigation.setOptions({
+    headerRight: () => {
+      return (
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: isEdit
+              ? isDark
+                ? DarkColor.Primary
+                : LightColor.Primary
+              : isDark
+                ? DarkColor.Background
+                : LightColor.Background,
+            borderRadius: 4,
+            paddingVertical: 4,
+            paddingLeft: 10,
+            paddingRight: 6,
+            marginRight: 10,
+            elevation: 1,
+            zIndex: 100,
+          }}
+          onPress={handleEdit}>
+          <Text
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: isEdit
+              color: isEdit
                 ? isDark
-                  ? DarkColor.Primary
-                  : LightColor.Primary
-                : 'white',
-              borderRadius: 4,
-              paddingVertical: 4,
-              paddingLeft: 10,
-              paddingRight: 6,
-              marginRight: 10,
-              elevation: 1,
-              zIndex: 100,
-            }}
-            onPress={handleEdit}>
-            <Text
-              style={{
-                color: isEdit
-                  ? isDark
-                    ? DarkColor.Background
-                    : LightColor.Background
-                  : isDark
-                  ? DarkColor.Text
-                  : LightColor.Text,
-                marginRight: 6,
-              }}>
-              {isEdit ? 'APPLIQUER' : 'MODIFIER'}
-            </Text>
-            <Icon
-              name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
-              color={
-                isEdit
-                  ? isDark
-                    ? DarkColor.Background
-                    : LightColor.Background
-                  : isDark
-                  ? DarkColor.Text
-                  : LightColor.Text
-              }
-              size={24}
-            />
-          </TouchableOpacity>
-        );
-      },
-    });
+                  ? DarkColor.Background
+                  : LightColor.Background
+                : isDark
+                ? DarkColor.Text
+                : LightColor.Text,
+              marginRight: 6,
+            }}>
+            {isEdit ? 'APPLIQUER' : 'MODIFIER'}
+          </Text>
+          <Icon
+            name={isEdit ? 'checkmark-circle-outline' : 'create-outline'}
+            color={
+              isEdit
+                ? isDark
+                  ? DarkColor.Background
+                  : LightColor.Background
+                : isDark
+                ? DarkColor.Text
+                : LightColor.Text
+            }
+            size={24}
+          />
+        </TouchableOpacity>
+      );
+    },
+  });
 
   const [isChange, setChange] = useState<boolean>(false);
   const [editDone, setEditDone] = useState<number[]>(
@@ -185,11 +190,12 @@ const OrderDetail = ({route, navigation}: Props) => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: done >= quantity.number ?
-                '#e4f3e4' :
-                isDark
-                  ? DarkColor.ComponentColor
-                  : LightColor.ComponentColor,
+                backgroundColor:
+                  done >= quantity.number
+                    ? '#e4f3e4'
+                    : isDark
+                    ? DarkColor.ComponentColor
+                    : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 6,
               }}>
@@ -202,7 +208,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 }}>
                 {done}
               </Text>
-              <Text>
+              <Text style={{color: isDark ? DarkColor.Text : LightColor.Text}}>
                 {editDone[id] === 0
                   ? ''
                   : (editDone[id] > 0 ? '+' : '') + editDone[id].toString()}
@@ -257,7 +263,9 @@ const OrderDetail = ({route, navigation}: Props) => {
               <TouchableOpacity
                 disabled={done + editDone[id] === 0}
                 style={{
-                  backgroundColor: isDark ? DarkColor.Secondary : LightColor.Secondary,
+                  backgroundColor: isDark
+                    ? DarkColor.Secondary
+                    : LightColor.Secondary,
                   borderRadius: 4,
                   padding: 4,
                   marginHorizontal: 8,
@@ -275,7 +283,13 @@ const OrderDetail = ({route, navigation}: Props) => {
                 !isEdit ? done + editDone[id] === quantity.number : false
               }
               style={{
-                backgroundColor: !isEdit ? isDark ? DarkColor.Primary : LightColor.Primary : isDark ? DarkColor.ComponentColor : LightColor.ComponentColor,
+                backgroundColor: !isEdit
+                  ? isDark
+                    ? DarkColor.Primary
+                    : LightColor.Primary
+                  : isDark
+                  ? DarkColor.ComponentColor
+                  : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 4,
               }}
@@ -302,23 +316,23 @@ const OrderDetail = ({route, navigation}: Props) => {
   );
 
   return (
-    <View style={{flex: 1}}>
-      <ScrollView
-        style={{
-          backgroundColor: isDark
-            ? DarkColor.Background
-            : LightColor.Background,
-        }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
+      }}>
+      <StatusBar barStyle={item.hasImage ? 'light-content' : isDark ? 'light-content' : 'dark-content'} />
+      <ScrollView>
         <View
           style={{
-            height: item.hasImage ? 280 : 10,
+            height: item.hasImage ? 'auto' : 70,
             backgroundColor: isDark
               ? DarkColor.Background
               : LightColor.Background,
           }}>
           {item.hasImage && (
             <TouchableOpacity
-              style={{position: 'absolute', bottom: 0, right: 0, padding: 20}}
+              style={{position: 'absolute', bottom: 0, right: 0, padding: 20, zIndex: 100}}
               onPress={() => setFullScreen(true)}>
               <Icon
                 name={'expand-outline'}
@@ -327,6 +341,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               />
             </TouchableOpacity>
           )}
+          {item.localImage && <Image source={{ uri: item.localImage }} style={{width: '100%', height: 280}} />}
         </View>
         <View style={{paddingHorizontal: 16}}>
           <TextInput
@@ -334,6 +349,7 @@ const OrderDetail = ({route, navigation}: Props) => {
             defaultValue={item.name}
             multiline={true}
             style={{
+              color: isDark ? DarkColor.Text : LightColor.Text,
               fontSize: 22,
               fontWeight: 'bold',
               textAlign: 'center',
@@ -358,6 +374,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               defaultValue={item.customer}
               onChangeText={text => (item.customer = text)}
               style={{
+                color: isDark ? DarkColor.Text : LightColor.Text,
                 textAlign: 'right',
                 padding: 0,
                 borderWidth: 1,
@@ -366,7 +383,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 paddingHorizontal: 8,
               }}
             />
-            <Text>-</Text>
+            <Text style={{color: isDark ? DarkColor.Text : LightColor.Text}}>-</Text>
             <TextInput
               editable={isEdit}
               autoCorrect={false}
@@ -377,6 +394,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               }
               onChangeText={text => (item.price = parseInt(text))}
               style={{
+                color: isDark ? DarkColor.Text : LightColor.Text,
                 textAlign: 'left',
                 padding: 0,
                 borderWidth: 1,
@@ -550,7 +568,7 @@ const OrderDetail = ({route, navigation}: Props) => {
           </View>
         )}
         <View style={{height: 40}} />
-        <Modal visible={fullScreen} animationType="slide" statusBarTranslucent>
+        <Modal visible={fullScreen} animationType="slide" statusBarTranslucent={true} onRequestClose={() => setFullScreen(false)}>
           <View
             style={{
               flex: 1,
@@ -562,14 +580,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 ? DarkColor.Background
                 : DarkColor.Background,
             }}>
-            <View
-              style={{
-                height: 400,
-                backgroundColor: isDark
-                  ? DarkColor.Primary
-                  : LightColor.Primary,
-              }}
-            />
+            {item.localImage && <Image source={{uri: item.localImage}} style={{width: '100%', height: 3000}} resizeMode='contain' />}
             <TouchableOpacity
               style={{position: 'absolute', bottom: 0, right: 0, padding: 20}}
               onPress={() => setFullScreen(false)}>

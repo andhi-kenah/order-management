@@ -41,6 +41,7 @@ const SearchInput: React.FC<Props> = ({
         />
         <TextInput
           placeholder={title}
+          placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
           inputMode="search"
           value={value}
           onChangeText={onChangeText}
