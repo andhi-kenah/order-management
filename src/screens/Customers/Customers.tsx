@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {DarkColor, LightColor} from 'colors/Colors';
 
+import useTheme from '../../services/Theme';
+import {DarkColor, LightColor} from '../../colors/Colors';
 import Header from '../../components/Header';
 import EmptyList from '../../components/EmptyList';
 import FloatingButton from '../../components/FloatingButton';
@@ -30,11 +31,11 @@ type Prop = {
 };
 
 const Customers: React.FC<Prop> = ({navigation}) => {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useTheme();
 
   const [items, setItems] = useState<string[]>();
   const [search, setSearch] = useState<string>('');
-  const [searchResult, setSearchResult] = useState<string[] | undefined>();
+  const [searchResult, setSearchResult] = useState<string[] | null>();
   const [searchMode, setSearchMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -42,7 +43,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
     setIsLoading(true);
     const subscriber = firestore()
       .collection('orders')
-      .orderBy('createdAt', 'desc')
+      .orderBy('createdOn', 'desc')
       .onSnapshot(
         query => {
           const data: string[] = [];
@@ -86,17 +87,15 @@ const Customers: React.FC<Prop> = ({navigation}) => {
   const RenderItem = ({data}: {data: string}) => {
     return (
       <TouchableOpacity
-        activeOpacity={0.8}
         style={{
-          backgroundColor:isDark ? DarkColor.ComponentColor : LightColor.Background,
           flex: 1,
           flexDirection: 'row',
           justifyContent: 'space-between',
+          backgroundColor: isDark ? DarkColor.ComponentColor : LightColor.Background,
           borderRadius: 8,
           marginVertical: 6,
           marginHorizontal: 18,
-          overflow: 'hidden',
-          elevation: 2,
+          elevation: 4
         }}
         onPress={() => navigation.navigate('CustomerDetail', {customer: data})}>
         <View style={{flex: 2, flexDirection: 'row', alignItems: 'center'}}>
@@ -117,7 +116,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
             <Text
               style={{
                 color: isDark ? DarkColor.Text : LightColor.Text,
-                fontSize: 15,
+                fontSize: 16,
                 fontFamily: 'sans-serif-medium',
               }}
               ellipsizeMode="tail"

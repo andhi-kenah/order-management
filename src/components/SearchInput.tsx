@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, TextInput, useColorScheme} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import useTheme from '../services/Theme';
 import {DarkColor, LightColor} from 'colors/Colors';
 
 type Props = {
@@ -14,7 +15,7 @@ const SearchInput: React.FC<Props> = ({
   value,
   onChangeText
 }: Props) => {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useTheme();
   return (
     <View
       style={{

@@ -1,27 +1,28 @@
-import type {StackNavigationProp} from '@react-navigation/stack';
-import type {DataType} from '../../Data';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { DataType } from '../../Data';
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  useColorScheme,
-  TouchableOpacity,
   FlatList,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Image,
+  TouchableOpacity
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 
-import {DarkColor, LightColor} from '../../colors/Colors';
+import useTheme from '../../services/Theme';
+import { DarkColor, LightColor } from '../../colors/Colors';
 import Header from '../../components/Header';
 import FloatingButton from 'components/FloatingButton';
 import EmptyList from '../../components/EmptyList';
-import {getDeliveryDate, getDone, getTotal} from '../../services/Functions';
+import { getDeliveryDate, getDone, getTotal } from '../../services/Functions';
 
 type OrderStackParamList = {
   OrderList: undefined;
-  OrderDetail: {item: DataType};
+  OrderDetail: { item: DataType };
   NewOrder: undefined;
 };
 type NavigationProps = StackNavigationProp<OrderStackParamList, 'OrderList'>;
@@ -30,8 +31,8 @@ type Prop = {
   navigation: NavigationProps;
 };
 
-const OrderList: React.FC<Prop> = ({navigation}) => {
-  const isDark = useColorScheme() === 'dark';
+const OrderList: React.FC<Prop> = ({ navigation }) => {
+  const isDark = useTheme();
 
   const [items, setItems] = useState<DataType[] | undefined>();
   const [search, setSearch] = useState<string>('');
@@ -43,7 +44,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
     setIsLoading(true);
     const subscriber = firestore()
       .collection('orders')
-      .orderBy('createdAt', 'desc')
+      .orderBy('createdOn', 'desc')
       .onSnapshot(
         querySnapshot => {
           const data: DataType[] = [];
@@ -84,7 +85,7 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
     setIsLoading(false);
   };
 
-  const RenderItem = ({data}: {data: DataType}) => {
+  const RenderItem = ({ data }: { data: DataType }) => {
     const setBackgroundColor = (): string => {
       if (getDone(data.done) === getTotal(data.quantity)) {
         return isDark ? '#232425' : '#f1fcf1';
@@ -95,7 +96,6 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
 
     return (
       <TouchableOpacity
-        activeOpacity={0.8}
         style={{
           backgroundColor: setBackgroundColor(),
           flex: 1,
@@ -105,39 +105,54 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
           marginVertical: 6,
           marginHorizontal: 18,
           overflow: 'hidden',
-          elevation: 2,
+          elevation: 4
         }}
-        onPress={() => navigation.navigate('OrderDetail', {item: data})}>
-        <View style={{flex: 2, flexDirection: 'row', alignItems: 'center'}}>
-          <View
-            style={{
-              height: '100%',
-              width: 70,
-              backgroundColor: isDark
-                ? DarkColor.ComponentColor
-                : LightColor.ComponentColor,
-            }}></View>
-          <View style={{flex: 1, paddingVertical: 16, paddingHorizontal: 12}}>
+        onPress={() => navigation.navigate('OrderDetail', { item: data })}>
+        <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
+          {
+            data.hasImage ?
+              (
+                <Image
+                  source={{uri: data.image ? data.image : ''}}
+                  style={{
+                    height: '100%',
+                    width: 70,
+                    backgroundColor: isDark
+                      ? DarkColor.ComponentColor
+                      : LightColor.ComponentColor,
+                  }} />
+              ) : (
+                <View
+                  style={{
+                    height: '100%',
+                    width: 70,
+                    backgroundColor: isDark
+                      ? DarkColor.ComponentColor
+                      : LightColor.ComponentColor,
+                  }} />
+              )
+          }
+          <View style={{ flex: 1, paddingVertical: 16, paddingHorizontal: 12 }}>
             <Text
               style={{
                 color: isDark ? DarkColor.Text : LightColor.Text,
                 fontSize: 16,
                 fontFamily: 'sans-serif-medium',
               }}
-              ellipsizeMode="tail"
-              numberOfLines={2}>
+              ellipsizeMode={'tail'}
+              numberOfLines={2}
+              >
               {data.name}
             </Text>
             <Text
               style={{
-                fontSize: 14,
+                color: isDark ? DarkColor.Text : LightColor.Text,
                 fontFamily: 'sans-serif-light',
-                color: isDark ? DarkColor.Text : LightColor.Text
               }}
-              ellipsizeMode="tail"
+              ellipsizeMode={'tail'}
               numberOfLines={1}>
               {data.customer}
-              <Text style={{color: 'lightgrey', fontFamily: 'sans-serif-thin'}}>
+              <Text style={{ color: 'lightgrey', fontFamily: 'sans-serif-thin' }}>
                 {' - '}
                 {getDeliveryDate(data.delivery)}
               </Text>
@@ -157,8 +172,8 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
                 getDone(data.done) == getTotal(data.quantity)
                   ? 'green'
                   : isDark
-                  ? DarkColor.Primary
-                  : LightColor.Primary,
+                    ? DarkColor.Primary
+                    : LightColor.Primary,
               backgroundColor: isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
@@ -208,16 +223,16 @@ const OrderList: React.FC<Prop> = ({navigation}) => {
         <>
           <FlatList
             data={searchMode ? searchResult : items}
-            renderItem={({item}: {item: DataType}) => (
+            renderItem={({ item }: { item: DataType }) => (
               <RenderItem data={item} key={item.key} />
             )}
-            keyExtractor={item => item.key}
-            style={{marginTop: 4}}
-            contentContainerStyle={{flexGrow: 1}}
+            keyExtractor={(item, index) => index.toString()}
+            style={{ marginTop: 4 }}
+            contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps={'handled'}
             keyboardDismissMode={'on-drag'}
-            ListHeaderComponentStyle={{marginBottom: 10}}
-            ListFooterComponent={<View style={{height: 80}} />}
+            ListHeaderComponentStyle={{ marginBottom: 10 }}
+            ListFooterComponent={<View style={{ height: 80 }} />}
             ListEmptyComponent={<EmptyList searchMode={searchMode} searchValue={search} />}
           />
           <FloatingButton

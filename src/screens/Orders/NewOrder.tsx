@@ -1,9 +1,9 @@
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import type { Asset, OptionsCommon } from 'react-native-image-picker';
 import type { DataType } from '../../Data';
 import React, { useState } from 'react';
 import {
-  useColorScheme,
   TextInput,
   StyleSheet,
   ScrollView,
@@ -13,8 +13,13 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Asset, OptionsCommon, launchImageLibrary } from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
+import { useNetInfo } from '@react-native-community/netinfo'
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import moment from 'moment';
+import useTheme from '../../services/Theme';
 import { DarkColor, LightColor } from '../../colors/Colors';
 
 type RootStackParamList = {
@@ -30,26 +35,27 @@ type Props = {
 };
 
 const NewOrder = ({ route, navigation }: Props) => {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useTheme();
+  const isConnected = useNetInfo()
 
-  const [imageInfo, setImageInfo] = useState<Asset[] | undefined>();
 
-  const [name, setName] = useState('');
-  const [customer, setCustomer] = useState(route.params?.customer || '');
-  const [quantity, setQuantity] = useState<{ number: number; detail: string }[]>([
-    { number: 0, detail: '' },
-  ]);
-  const [done, setDone] = useState<{ number: number; detail: string }[]>([
-    { number: 0, detail: '' },
-  ]);
-  const [hasImage, setHasImage] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
-  const [localImage, setLocalImage] = useState<string | undefined | null>(null);
-  const [price, setPrice] = useState('');
-  const [delivery, setDelivery] = useState('');
-  const [description, setDescription] = useState('');
-
-  let [numberInput, setNumberInput] = useState<number[]>([Date.now()]);
+  const [order, setOrder] = useState<DataType>({ // New Order State: Datatype
+    name: '',
+    customer: route.params?.customer || '',
+    hasImage: false,
+    image: '',
+    localImage: '',
+    price: 0,
+    delivery: '',
+    description: '',
+    createdOn: Date.now(),
+    editedOn: Date.now(),
+    quantity: [{ number: 1, detail: '' }],
+    done: [{ number: 0, detail: '' }],
+    isDone: false
+  });
+  const [imageInfo, setImageInfo] = useState<{ asset: Asset[] | undefined, ref: string }>();
+  const [numberInput, setNumberInput] = useState<number[]>([Date.now()]);
 
   const selectImage = () => {
     const option: OptionsCommon = {
@@ -65,36 +71,84 @@ const NewOrder = ({ route, navigation }: Props) => {
         console.log('ImagePicker Error: ', response.errorCode);
       } else {
         const source = { uri: response.assets };
-        setImageInfo(source.uri);
-        setImage((Math.floor(Math.random() * 10000)).toString());
-        setLocalImage(source.uri ? source.uri[0].uri : '');
-        setHasImage(true);
+
+        setImageInfo({ asset: source.uri, ref: (Date.now() * (Math.floor(Math.random() * 99) + 1)).toString() });
+        setOrder({
+          ...order,
+          hasImage: true,
+          image: (Math.floor(Math.random() * 10000)).toString(),
+          localImage: source.uri ? source.uri[0].uri : ''
+        });
       }
     })
   }
 
-  const handleSubmit = () => {
+  const showDatePicker = () => {
+    DateTimePickerAndroid.open({
+      value: new Date(),
+      onChange: (e, date) => {
+        setOrder({
+          ...order,
+          delivery:
+            moment(date).calendar() === moment(new Date()).calendar()
+              ? ''
+              : moment(date).format('DD/MM/YYYY')
+        })
+      },
+      mode: 'date',
+      minimumDate: new Date(),
+      negativeButton: { label: '' }
+    });
+  };
+
+  const handleSubmit = async () => {
     try {
+      let downloadUrl: string = '';
+
+      if (order.hasImage && !isConnected.isConnected) {
+        const ref = storage().ref('images/' + imageInfo?.ref);
+        const task = await ref.putFile(imageInfo?.asset?.[0].uri ? imageInfo.asset?.[0].uri : '');
+        switch (task.state) {
+          case 'cancelled':
+            console.log('task cancelled');
+            break;
+          case 'error':
+            console.log('task error');
+            break;
+          case 'paused':
+            console.log('task paused');
+            break;
+          case 'running':
+            console.log('task running');
+            break;
+          case 'success':
+            console.log('task success');
+            break;
+          default:
+            throw new Error('Throw new error on task');
+        }
+        downloadUrl = await storage().ref('images/' + imageInfo?.ref).getDownloadURL();
+      }
+
       firestore()
         .collection('orders')
         .add({
-          name: name.trim(),
-          customer: customer.trim(),
-          quantity,
-          done,
-          hasImage,
-          image,
-          localImage,
-          price: isNaN(parseInt(price.trim())) ? 0 : parseInt(price),
-          description: description.trim(),
-          delivery: delivery.trim(),
-          createdAt: firestore.FieldValue.serverTimestamp(),
-        });
-      console.log('Image name'+ image);
-      console.log('hasImage'+ hasImage);
+          name: order.name.trim(),
+          customer: order.customer.trim(),
+          quantity: order.quantity,
+          done: order.done,
+          hasImage: order.hasImage,
+          image: downloadUrl,
+          localImage: order.localImage || null,
+          price: isNaN(order.price) ? 0 : order.price,
+          description: order.description.trim(),
+          delivery: order.delivery.trim(),
+          createdOn: order.createdOn,
+          editedOn: order.editedOn,
+        })
       navigation.goBack();
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -104,12 +158,11 @@ const NewOrder = ({ route, navigation }: Props) => {
         setNumberInput(currentInput => {
           return currentInput.filter(value => value !== key);
         });
-        setQuantity(currentQuantity => {
-          return currentQuantity.filter((_, i) => i !== index);
-        });
-        setDone(currentDone => {
-          return currentDone.filter((_, i) => i !== index);
-        });
+        setOrder({
+          ...order,
+          quantity: order.quantity.filter((_, i) => i !== index),
+          done: order.done.filter((_, i) => i !== index)
+        })
       };
 
       return (
@@ -122,7 +175,14 @@ const NewOrder = ({ route, navigation }: Props) => {
               placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
               keyboardType={'number-pad'}
               style={[styles.input, { textAlign: 'center' }]}
-              onChangeText={text => (quantity[index].number = parseInt(text))}
+              onChangeText={text => {
+                let quantity = order.quantity;
+                quantity[index].number = parseInt(text);
+                setOrder({
+                  ...order,
+                  quantity
+                })
+              }}
             />
           </View>
           <View style={{ flex: 5 }}>
@@ -131,17 +191,24 @@ const NewOrder = ({ route, navigation }: Props) => {
               placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
               style={[styles.input]}
               onChangeText={text => {
-                quantity[index].detail = text.trim();
+                let quantity = order.quantity;
+                quantity[index].detail = text;
+                let done = order.done;
                 done[index].detail = text.trim();
+                setOrder({
+                  ...order,
+                  quantity,
+                  done
+                })
               }}
             />
           </View>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <TouchableOpacity
-              disabled={quantity.length === 1}
+              disabled={order.quantity.length === 1}
               style={{
                 backgroundColor:
-                  quantity.length === 1
+                  order.quantity.length === 1
                     ? 'lightgrey'
                     : isDark
                       ? DarkColor.Danger
@@ -166,7 +233,7 @@ const NewOrder = ({ route, navigation }: Props) => {
         flex: 1,
         backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
       }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginTop: 20 }}>
+      <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginTop: 20 }}>
         Nouvelle commande
       </Text>
       <ScrollView
@@ -185,7 +252,7 @@ const NewOrder = ({ route, navigation }: Props) => {
             imageInfo && (
               <View style={{ alignItems: "center", marginTop: 6, overflow: 'hidden' }}>
                 <TouchableOpacity
-                  style={{ 
+                  style={{
                     position: 'absolute',
                     top: 10,
                     right: 10,
@@ -193,11 +260,20 @@ const NewOrder = ({ route, navigation }: Props) => {
                     elevation: 2,
                     zIndex: 100,
                     backgroundColor: isDark ? DarkColor.Background : LightColor.Background
-                    }}
-                    onPress={() => {setImageInfo(undefined);setImage(null);setLocalImage(null);setHasImage(false)}}>
+                  }}
+                  onPress={() => {
+                    setImageInfo(undefined);
+                    setOrder({
+                      ...order,
+                      image: '',
+                      localImage: '',
+                      hasImage: false
+                    })
+                  }}
+                >
                   <Icon name={'close'} size={30} color={isDark ? DarkColor.Text : LightColor.Text} />
                 </TouchableOpacity>
-                <Image source={{ uri: imageInfo[0].uri }} style={{ width: 300, height: 200, borderRadius: 6 }} resizeMode='cover' />
+                <Image source={{ uri: imageInfo.asset?.[0].uri }} style={{ width: 300, height: 200, borderRadius: 6 }} resizeMode='cover' />
                 {/* { localImage && <Image source={{ uri: localImage }} style={{ width: 300, height: 200, borderRadius: 6 }} resizeMode='cover' />} */}
               </View>
             )
@@ -207,30 +283,45 @@ const NewOrder = ({ route, navigation }: Props) => {
           </TouchableOpacity>
         </View>
         <View style={{ marginBottom: 6 }}>
+          <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold' }}>Nom du produit :</Text>
           <TextInput
-            placeholder={'Nom du produit'}
+            placeholder={'Produit'}
             placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-            style={styles.input}
-            value={name}
-            onChangeText={text => setName(text)}
+            style={[styles.input, { flex: 1, color: isDark ? DarkColor.Text : LightColor.Text }]}
+            value={order.name}
+            autoFocus={true}
+            onChangeText={text => {
+              setOrder({
+                ...order,
+                name: text
+              })
+            }}
           />
         </View>
         <View style={{ marginBottom: 6 }}>
+          <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold', marginRight: 4 }}>Client :</Text>
           <TextInput
             placeholder={'Client'}
             placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-            style={styles.input}
-            value={customer}
-            onChangeText={text => setCustomer(text)}
+            style={[styles.input, { flex: 1, color: isDark ? DarkColor.Text : LightColor.Text }]}
+            value={order.customer}
+            onChangeText={text => {
+              setOrder({
+                ...order,
+                customer: text
+              })
+            }}
           />
         </View>
+        <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold', marginRight: 4 }}>Quantité :</Text>
         {addNewNumber()}
         <View style={{ alignItems: 'center', marginBottom: 10 }}>
           <TouchableOpacity
-            disabled={quantity.length > 9}
+            disabled={order.quantity.length > 9}
+            activeOpacity={0.8}
             style={{
               backgroundColor:
-                quantity.length > 9
+                order.quantity.length > 9
                   ? 'lightgrey'
                   : isDark
                     ? DarkColor.Primary
@@ -239,41 +330,64 @@ const NewOrder = ({ route, navigation }: Props) => {
               paddingHorizontal: 10,
               margin: 'auto',
             }}
-            activeOpacity={0.8}
             onPress={() => {
               setNumberInput([...numberInput, Date.now()]);
-              setQuantity(prev => [...prev, { number: 0, detail: '' }]);
-              setDone(prev => [...prev, { number: 0, detail: '' }]);
-            }}>
+              setOrder({
+                ...order,
+                quantity: [...order.quantity, { number: 0, detail: '' }],
+                done: [...order.done, { number: 0, detail: '' }],
+              })
+            }}
+          >
             <Icon name={'add'} color={'white'} size={30} />
           </TouchableOpacity>
         </View>
-        <View style={{ marginBottom: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+          <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold', marginRight: 4 }}>Prix :</Text>
           <TextInput
-            placeholder={'Prix'}
+            placeholder={'0'}
             placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-            style={styles.input}
-            value={price}
-            onChangeText={text => setPrice(text)}
+            style={[styles.input, { flex: 1, color: isDark ? DarkColor.Text : LightColor.Text }]}
+            onChangeText={text => {
+              setOrder({
+                ...order,
+                price: parseInt(text)
+              })
+            }}
           />
         </View>
-        <View style={{ marginBottom: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+          <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold', marginRight: 4 }}>Date de livraison :</Text>
           <TextInput
-            placeholder={'Date de livraison'}
+            placeholder={'DD/MM/YYYY'}
             placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-            style={styles.input}
-            value={delivery}
-            onChangeText={text => setDelivery(text)}
+            style={[styles.input, { flex: 1, color: isDark ? DarkColor.Text : LightColor.Text }]}
+            value={order.delivery}
+            onChangeText={text => {
+              setOrder({
+                ...order,
+                delivery: text
+              })
+            }}
           />
+          <TouchableOpacity style={{ marginLeft: 10 }} onPress={showDatePicker}>
+            <Icon name={'calendar-outline'} size={30} color={isDark ? DarkColor.Text : LightColor.Text} />
+          </TouchableOpacity>
         </View>
         <View style={{ marginBottom: 6 }}>
+          <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold' }}>Description :</Text>
           <TextInput
-            placeholder={'Description'}
+            placeholder={'...'}
             placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-            style={styles.input}
+            style={[styles.input, { color: isDark ? DarkColor.Text : LightColor.Text }]}
             multiline={true}
-            value={description}
-            onChangeText={text => setDescription(text)}
+            value={order.description}
+            onChangeText={text => {
+              setOrder({
+                ...order,
+                description: text
+              })
+            }}
           />
         </View>
         <TouchableOpacity

@@ -1,8 +1,8 @@
-import type {RouteProp} from '@react-navigation/native';
-import type {StackNavigationProp} from '@react-navigation/stack';
-import type {DataType, quantity} from '../../Data';
+import type { RouteProp } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { DataType, quantity } from '../../Data';
 
-import React, {memo, useEffect, useState} from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
   Image,
   Modal,
@@ -11,19 +11,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  useColorScheme,
+  View
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
 
-import {DarkColor, LightColor} from '../../colors/Colors';
+import useTheme from '../../services/Theme';
+import { DarkColor, LightColor } from '../../colors/Colors';
 import FloatingButton from '../../components/FloatingButton';
-import {getDeliveryDate} from '../../services/Functions';
+import { getDeliveryDate } from '../../services/Functions';
 
 type RootStackParamList = {
-  OrderList: {item: DataType};
-  OrderDetail: {item: DataType};
+  OrderList: { item: DataType };
+  OrderDetail: { item: DataType };
 };
 
 type Props = {
@@ -31,16 +31,124 @@ type Props = {
   route: RouteProp<RootStackParamList, 'OrderDetail'>;
 };
 
-const OrderDetail = ({route, navigation}: Props) => {
-  const isDark = useColorScheme() === 'dark';
-  const {item} = route.params;
+const OrderDetail = ({ route, navigation }: Props) => {
+  const isDark = useTheme();
+  const { item } = route.params;
 
-  // console.log(item);
-  
+  const [isChange, setChange] = useState<boolean>(false);
+  const [changeDone, setChangeDone] = useState<number[]>(
+    Array.from({ length: item.done.length }, () => 0),
+  );
 
-  navigation.setOptions({
-    headerRight: () => {
-      return (
+  const [isEdit, setEdit] = useState<boolean>(false);
+  const [fullScreen, setFullScreen] = useState<boolean>(false);
+
+  const handleEdit = async () => {
+    if (isEdit) {
+      firestore()
+        .collection('orders')
+        .doc(item.key)
+        .update({
+          // editedOn: 
+        })
+      console.log(item.createdOn);
+      console.log(item.editedOn);
+      setEdit(false);
+    } else {
+      setEdit(true)
+    }
+  }
+
+  const handleChange = async () => {
+    try {
+      let newDone: quantity[] = [];
+      if (newDone) {
+        for (let n in changeDone) {
+          let d: quantity = {
+            number: changeDone[n] + item.done[n].number,
+            detail: item.done[n].detail,
+          };
+          newDone = [...newDone, d];
+        }
+      }
+
+      setChangeDone(Array.from({ length: item.done.length }, () => 0));
+      setChange(false);
+      item.done = newDone;
+
+      await firestore().collection('orders').doc(item.key).update({
+        done: newDone,
+      });
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleDelete = () => {
+    firestore().collection('orders').doc(item.key).delete();
+  };
+
+  useEffect(() => {
+    let change = 0;
+    for (let i = 0; i < changeDone.length; i++) {
+      if (changeDone[i] !== 0) {
+        change += 1;
+      } else {
+        change += 0;
+      }
+    }
+    if (change) {
+      setChange(true);
+    } else {
+      setChange(false);
+    }
+  }, [changeDone]);
+
+  const headerRight = () => {
+    return (
+      <View style={{
+        position: 'absolute',
+        top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 10,
+        right: 0,
+        flexDirection: 'row',
+        zIndex: 100
+      }}>
+        {isEdit &&
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: isDark
+                ? DarkColor.Background
+                : LightColor.Background,
+              borderRadius: 4,
+              paddingVertical: 4,
+              paddingLeft: 10,
+              paddingRight: 8,
+              marginRight: 10,
+              elevation: 1,
+            }}
+            onPress={() => setEdit(false)}>
+            <Text
+              style={{
+                color: isDark
+                  ? DarkColor.Text
+                  : LightColor.Text,
+                marginRight: 6,
+              }}>
+              ANNULER
+            </Text>
+            <Icon
+              name={'close-circle-outline'}
+              color={isDark
+                ? DarkColor.Text
+                : LightColor.Text
+              }
+              size={24}
+            />
+          </TouchableOpacity>
+        }
         <TouchableOpacity
           style={{
             flexDirection: 'row',
@@ -55,10 +163,9 @@ const OrderDetail = ({route, navigation}: Props) => {
             borderRadius: 4,
             paddingVertical: 4,
             paddingLeft: 10,
-            paddingRight: 6,
+            paddingRight: 8,
             marginRight: 10,
             elevation: 1,
-            zIndex: 100,
           }}
           onPress={handleEdit}>
           <Text
@@ -68,8 +175,8 @@ const OrderDetail = ({route, navigation}: Props) => {
                   ? DarkColor.Background
                   : LightColor.Background
                 : isDark
-                ? DarkColor.Text
-                : LightColor.Text,
+                  ? DarkColor.Text
+                  : LightColor.Text,
               marginRight: 6,
             }}>
             {isEdit ? 'APPLIQUER' : 'MODIFIER'}
@@ -82,98 +189,41 @@ const OrderDetail = ({route, navigation}: Props) => {
                   ? DarkColor.Background
                   : LightColor.Background
                 : isDark
-                ? DarkColor.Text
-                : LightColor.Text
+                  ? DarkColor.Text
+                  : LightColor.Text
             }
             size={24}
           />
         </TouchableOpacity>
-      );
-    },
-  });
-
-  const [isChange, setChange] = useState<boolean>(false);
-  const [editDone, setEditDone] = useState<number[]>(
-    Array.from({length: item.done.length}, () => 0),
-  );
-
-  const [isEdit, setEdit] = useState<boolean>(false);
-  const [fullScreen, setFullScreen] = useState<boolean>(false);
-
-  const handleChange = async () => {
-    let newDone: quantity[] = [];
-    if (newDone) {
-      for (let n in editDone) {
-        let d: quantity = {
-          number: editDone[n] + item.done[n].number,
-          detail: item.done[n].detail,
-        };
-        newDone = [...newDone, d];
-      }
-    }
-
-    setEditDone(Array.from({length: item.done.length}, () => 0));
-    setChange(false);
-    item.done = newDone;
-
-    await firestore().collection('orders').doc(item.key).update({
-      done: newDone,
-    });
-  };
-
-  const handleEdit = () => {
-    if (isEdit) {
-      setEdit(false);
-    } else {
-      setEdit(true);
-    }
-  };
-
-  const handleDelete = () => {
-    firestore().collection('orders').doc(item.key).delete();
-  };
-
-  useEffect(() => {
-    let change = 0;
-    for (let i = 0; i < editDone.length; i++) {
-      if (editDone[i] !== 0) {
-        change += 1;
-      } else {
-        change += 0;
-      }
-    }
-    if (change) {
-      setChange(true);
-    } else {
-      setChange(false);
-    }
-  }, [editDone]);
+      </View>
+    )
+  }
 
   const ItemNumber = memo(
-    ({id, quantity, done}: {id: number; quantity: quantity; done: number}) => {
+    ({ id, quantity, done }: { id: number; quantity: quantity; done: number }) => {
       const decrement = () => {
-        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        const updatedAreas = JSON.parse(JSON.stringify(changeDone));
         updatedAreas[id] -= 1;
-        setEditDone(updatedAreas);
+        setChangeDone(updatedAreas);
       };
 
       const increment = () => {
-        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        const updatedAreas = JSON.parse(JSON.stringify(changeDone));
         updatedAreas[id] += 1;
-        setEditDone(updatedAreas);
+        setChangeDone(updatedAreas);
       };
 
       const incrementTen = () => {
-        const updatedAreas = JSON.parse(JSON.stringify(editDone));
+        const updatedAreas = JSON.parse(JSON.stringify(changeDone));
         if (
-          item.done[id].number + editDone[id] + 10 <=
+          item.done[id].number + changeDone[id] + 10 <=
           item.quantity[id].number
         ) {
           updatedAreas[id] += 10;
-          setEditDone(updatedAreas);
+          setChangeDone(updatedAreas);
         } else {
           updatedAreas[id] = item.quantity[id].number;
-          setEditDone(updatedAreas);
+          setChangeDone(updatedAreas);
         }
       };
 
@@ -185,7 +235,7 @@ const OrderDetail = ({route, navigation}: Props) => {
             justifyContent: 'space-between',
             marginVertical: 4,
           }}>
-          <View style={{flex: 2, flexDirection: 'row', alignItems: 'center'}}>
+          <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -194,8 +244,8 @@ const OrderDetail = ({route, navigation}: Props) => {
                   done >= quantity.number
                     ? '#e4f3e4'
                     : isDark
-                    ? DarkColor.ComponentColor
-                    : LightColor.ComponentColor,
+                      ? DarkColor.ComponentColor
+                      : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 6,
               }}>
@@ -208,10 +258,10 @@ const OrderDetail = ({route, navigation}: Props) => {
                 }}>
                 {done}
               </Text>
-              <Text style={{color: isDark ? DarkColor.Text : LightColor.Text}}>
-                {editDone[id] === 0
+              <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text }}>
+                {changeDone[id] === 0
                   ? ''
-                  : (editDone[id] > 0 ? '+' : '') + editDone[id].toString()}
+                  : (changeDone[id] > 0 ? '+' : '') + changeDone[id].toString()}
               </Text>
               <Text
                 style={{
@@ -261,7 +311,7 @@ const OrderDetail = ({route, navigation}: Props) => {
             }}>
             {!isEdit && (
               <TouchableOpacity
-                disabled={done + editDone[id] === 0}
+                disabled={done + changeDone[id] === 0}
                 style={{
                   backgroundColor: isDark
                     ? DarkColor.Secondary
@@ -280,7 +330,7 @@ const OrderDetail = ({route, navigation}: Props) => {
             )}
             <TouchableOpacity
               disabled={
-                !isEdit ? done + editDone[id] === quantity.number : false
+                !isEdit ? done + changeDone[id] === quantity.number : false
               }
               style={{
                 backgroundColor: !isEdit
@@ -288,8 +338,8 @@ const OrderDetail = ({route, navigation}: Props) => {
                     ? DarkColor.Primary
                     : LightColor.Primary
                   : isDark
-                  ? DarkColor.ComponentColor
-                  : LightColor.ComponentColor,
+                    ? DarkColor.ComponentColor
+                    : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 4,
               }}
@@ -304,8 +354,8 @@ const OrderDetail = ({route, navigation}: Props) => {
                       ? DarkColor.Background
                       : LightColor.Background
                     : isDark
-                    ? DarkColor.Danger
-                    : LightColor.Danger
+                      ? DarkColor.Danger
+                      : LightColor.Danger
                 }
               />
             </TouchableOpacity>
@@ -321,7 +371,8 @@ const OrderDetail = ({route, navigation}: Props) => {
         flex: 1,
         backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
       }}>
-      <StatusBar barStyle={item.hasImage ? 'light-content' : isDark ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      {headerRight()}
       <ScrollView>
         <View
           style={{
@@ -332,18 +383,37 @@ const OrderDetail = ({route, navigation}: Props) => {
           }}>
           {item.hasImage && (
             <TouchableOpacity
-              style={{position: 'absolute', bottom: 0, right: 0, padding: 20, zIndex: 100}}
+              style={{
+                position: 'absolute',
+                bottom: 10,
+                right: 10,
+                backgroundColor: isDark
+                  ? DarkColor.Background
+                  : LightColor.Background,
+                height: 34,
+                width: 34,
+                borderRadius: 50,
+                alignItems: 'center',
+                justifyContent: 'center',
+                elevation: 4,
+                zIndex: 100
+              }}
               onPress={() => setFullScreen(true)}>
               <Icon
                 name={'expand-outline'}
-                size={24}
-                color={isDark ? DarkColor.Background : LightColor.Background}
+                color={
+                  isDark
+                    ? DarkColor.Text
+                    : LightColor.Text
+                }
+                size={22}
               />
             </TouchableOpacity>
           )}
-          {item.localImage && <Image source={{ uri: item.localImage }} style={{width: '100%', height: 280}} />}
+          {/* {item.localImage && <Image source={{ uri: item.localImage }} style={{ width: '100%', height: 280 }} />} */}
+          {item.image && <Image source={{ uri: item.image }} style={{ width: '100%', height: 280 }} />}
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <TextInput
             editable={isEdit}
             defaultValue={item.name}
@@ -383,7 +453,7 @@ const OrderDetail = ({route, navigation}: Props) => {
                 paddingHorizontal: 8,
               }}
             />
-            <Text style={{color: isDark ? DarkColor.Text : LightColor.Text}}>-</Text>
+            <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text }}>-</Text>
             <TextInput
               editable={isEdit}
               autoCorrect={false}
@@ -415,7 +485,7 @@ const OrderDetail = ({route, navigation}: Props) => {
             }}
           />
 
-          <View style={{marginVertical: 20}}>
+          <View style={{ marginVertical: 20 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -429,11 +499,11 @@ const OrderDetail = ({route, navigation}: Props) => {
               <Text
                 style={{
                   color: isDark ? DarkColor.Text : LightColor.Text,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: 'bold',
                   marginHorizontal: 10,
                 }}>
-                Quantité{''}:
+                Quantité{' '}:
               </Text>
             </View>
             {item.quantity.map((value, index) => {
@@ -462,11 +532,11 @@ const OrderDetail = ({route, navigation}: Props) => {
             <Text
               style={{
                 color: isDark ? DarkColor.Text : LightColor.Text,
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: 'bold',
                 marginHorizontal: 10,
               }}>
-              Livraison{''}:
+              Livraison{' '}:
             </Text>
             <TextInput
               editable={isEdit}
@@ -477,6 +547,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               }
               onChangeText={text => (item.delivery = text)}
               style={{
+                color: isDark ? DarkColor.Text : LightColor.Text,
                 borderWidth: 1,
                 borderColor: isEdit ? 'lightgrey' : 'transparent',
                 borderRadius: 4,
@@ -486,7 +557,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               }}
             />
           </View>
-          <View style={{marginVertical: 10}}>
+          <View style={{ marginVertical: 10 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -500,11 +571,11 @@ const OrderDetail = ({route, navigation}: Props) => {
               <Text
                 style={{
                   color: isDark ? DarkColor.Text : LightColor.Text,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: 'bold',
                   marginHorizontal: 10,
                 }}>
-                Description{''}:
+                Description{' '}:
               </Text>
             </View>
             <TextInput
@@ -544,7 +615,7 @@ const OrderDetail = ({route, navigation}: Props) => {
               }}
               onPress={handleDelete}>
               <Icon name={'trash'} color={'white'} size={18} />
-              <Text style={{fontSize: 16, color: 'white', marginLeft: 10}}>
+              <Text style={{ fontSize: 16, color: 'white', marginLeft: 10 }}>
                 Supprimer la commande
               </Text>
             </TouchableOpacity>
@@ -561,33 +632,56 @@ const OrderDetail = ({route, navigation}: Props) => {
                 elevation: 2,
               }}>
               <Icon name={'checkmark-done'} color={'white'} size={18} />
-              <Text style={{fontSize: 16, color: 'white', marginLeft: 10}}>
+              <Text style={{ fontSize: 16, color: 'white', marginLeft: 10 }}>
                 Terminer la commande
               </Text>
             </TouchableOpacity>
           </View>
         )}
-        <View style={{height: 40}} />
+        <View style={{ height: 40 }} />
         <Modal visible={fullScreen} animationType="slide" statusBarTranslucent={true} onRequestClose={() => setFullScreen(false)}>
           <View
             style={{
               flex: 1,
               justifyContent: 'center',
+              marginTop: StatusBar.currentHeight
+                ? -StatusBar.currentHeight
+                : 0,
               marginBottom: StatusBar.currentHeight
                 ? -StatusBar.currentHeight
                 : 0,
               backgroundColor: isDark
                 ? DarkColor.Background
-                : DarkColor.Background,
+                : LightColor.Background,
             }}>
-            {item.localImage && <Image source={{uri: item.localImage}} style={{width: '100%', height: 3000}} resizeMode='contain' />}
+            {/* {item.localImage && <Image source={{ uri: item.localImage }} style={{ width: '100%', height: '100%' }} resizeMode='contain' />} */}
+            {item.image && <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} resizeMode='contain' />}
+
             <TouchableOpacity
-              style={{position: 'absolute', bottom: 0, right: 0, padding: 20}}
+              style={{
+                position: 'absolute',
+                bottom: 10,
+                right: 10,
+                backgroundColor: isDark
+                  ? DarkColor.Background
+                  : LightColor.Background,
+                height: 34,
+                width: 34,
+                borderRadius: 50,
+                alignItems: 'center',
+                justifyContent: 'center',
+                elevation: 4,
+                zIndex: 100
+              }}
               onPress={() => setFullScreen(false)}>
               <Icon
                 name={'contract-outline'}
-                size={24}
-                color={isDark ? DarkColor.Background : LightColor.Background}
+                color={
+                  isDark
+                    ? DarkColor.Text
+                    : LightColor.Text
+                }
+                size={22}
               />
             </TouchableOpacity>
           </View>

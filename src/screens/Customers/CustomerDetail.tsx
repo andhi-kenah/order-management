@@ -3,16 +3,17 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import type { DataType } from 'Data';
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, useColorScheme, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import { DarkColor, LightColor } from 'colors/Colors';
+import useTheme from 'services/Theme';
+import { DarkColor, LightColor } from '../../colors/Colors';
 import FloatingButton from 'components/FloatingButton';
 
 type RootStackParamList = {
-    Customer: { item: string };
+    Customer: { customer: string };
     CustomerDetail: undefined;
     OrderDetail: { item: DataType };
-    NewOrder: {customer: string}
+    NewOrder: { customer: string }
 };
 
 type Props = {
@@ -21,7 +22,7 @@ type Props = {
 };
 
 const CustomerDetail = ({ route, navigation }: Props) => {
-    const isDark = useColorScheme() === 'dark';
+    const isDark = useTheme();
 
     const [items, setItems] = useState<DataType[]>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -30,8 +31,8 @@ const CustomerDetail = ({ route, navigation }: Props) => {
         setIsLoading(true);
         const subscriber = firestore()
             .collection('orders')
-            .where('customer', '==', route.params.item)
-            .orderBy('createdAt', 'desc')
+            .where('customer', '==', route.params.customer)
+            .orderBy('createdOn', 'desc')
             .onSnapshot(
                 querySnapshot => {
                     const data: DataType[] = [];
@@ -39,7 +40,6 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                     querySnapshot.forEach((doc: any) => {
                         data.push({
                             ...doc.data(),
-                            key: doc.id,
                         });
                     });
                     setItems(data);
@@ -59,7 +59,7 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                 backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
                 paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 10
             }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: isDark ? DarkColor.Text : LightColor.Text }}>{route.params.item}</Text>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: isDark ? DarkColor.Text : LightColor.Text }}>{route.params.customer}</Text>
             <Text style={{ textAlign: 'center', color: isDark ? DarkColor.Text : LightColor.Text }}>Commandes</Text>
             {isLoading ? (
                 <View
@@ -109,9 +109,9 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                                                     borderRadius: 4,
                                                     padding: 6
                                                 }}>
-                                                    <Text style={{fontSize: 16, color: isDark ? DarkColor.Text : LightColor.Text}}>{value.done[i].number}</Text>
-                                                    <Text style={{fontSize: 16, color: isDark ? DarkColor.Text : LightColor.Text}}>/</Text>
-                                                    <Text style={{fontSize: 16, fontWeight: 'bold', color: isDark ? DarkColor.Text : LightColor.Text}}>{q.number}</Text>
+                                                    <Text style={{ fontSize: 16, color: isDark ? DarkColor.Text : LightColor.Text }}>{value.done[i].number}</Text>
+                                                    <Text style={{ fontSize: 16, color: isDark ? DarkColor.Text : LightColor.Text }}>/</Text>
+                                                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: isDark ? DarkColor.Text : LightColor.Text }}>{q.number}</Text>
                                                 </View>
                                                 <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontSize: 16, marginLeft: 4 }}>{q.detail}</Text>
                                             </View>
@@ -121,11 +121,11 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                             </TouchableOpacity>
                         )
                     })}
-                    <View style={{height: 80}} />
+                    <View style={{ height: 80 }} />
                 </ScrollView>
             )
             }
-            <FloatingButton backgroundColor={isDark ? DarkColor.Primary : LightColor.Primary} icon={'add'} onPress={() => navigation.navigate('NewOrder', {customer: route.params.item})}/>
+            <FloatingButton backgroundColor={isDark ? DarkColor.Primary : LightColor.Primary} icon={'add'} onPress={() => navigation.navigate('NewOrder', { customer: route.params.customer })} />
         </View >
     );
 };

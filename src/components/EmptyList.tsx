@@ -1,6 +1,7 @@
 import { Text, View, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { DarkColor, LightColor } from 'colors/Colors';
+import useTheme from '../services/Theme';
 
 type Props = {
   searchMode: boolean;
@@ -8,7 +9,8 @@ type Props = {
 }
 
 const EmptyList = ({ searchMode, searchValue }: Props) => {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useTheme();
+  
   return (
     <View
       style={{

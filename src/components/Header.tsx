@@ -1,16 +1,14 @@
 import React, {useState} from 'react';
 import {
   View,
-  Text,
   useColorScheme,
   StatusBar,
   TouchableOpacity,
-  LayoutAnimation,
-  Platform,
-  UIManager,
+  Text,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {DarkColor, LightColor} from 'colors/Colors';
+import useTheme from '../services/Theme';
+import {DarkColor, LightColor} from '../colors/Colors';
 import SearchInput from './SearchInput';
 
 type Props = {
@@ -24,38 +22,8 @@ type Props = {
   onFilter?: () => void;
 };
 
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-const Anim = () => {
-  LayoutAnimation.configureNext({
-    duration: 500,
-    create: {
-      duration: 200,
-      property: 'scaleXY',
-      type: 'spring',
-      springDamping: 1.4,
-    },
-    update: {
-      property: 'scaleXY',
-      type: 'spring',
-      springDamping: 1.4
-    },
-    delete: {
-      duration: 200,
-      property: 'scaleY',
-      type: 'spring',
-      springDamping: 1.4
-    }
-  })
-}
-
 const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searchValue, onChangeText, hasFilter}: Props) => {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useTheme();
 
   const [searchActive, setSearchActive] = useState<boolean>(false);
 
@@ -67,13 +35,7 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
         marginHorizontal: 18,
         marginBottom: 4
       }}>
-      <Text
-        style={{
-          fontSize: 22,
-          fontWeight: 'bold',
-          fontFamily: 'sans-serif-light',
-          color: isDark ? 'white' : 'black',
-        }}>
+      <Text style={{fontSize: 22, fontWeight: 'bold', color: isDark ? DarkColor.Text : LightColor.Text}} numberOfLines={1}>
         {title}
       </Text>
       <View
@@ -99,7 +61,7 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
               <Icon
                 name={'funnel'}
                 color={
-                  useColorScheme() === 'dark' ? DarkColor.Text : LightColor.Text
+                  isDark ? DarkColor.Text : LightColor.Text
                 }
                 size={18}
                 style={{marginTop: 4}}
@@ -121,7 +83,7 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
             <Icon
               name={'search'}
               color={
-                useColorScheme() === 'dark' ? DarkColor.Text : LightColor.Text
+                isDark ? DarkColor.Text : LightColor.Text
               }
               size={22}
             />

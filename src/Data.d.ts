@@ -1,5 +1,5 @@
 export interface DataType {
-  key: string;
+  key?: string;
   name: string;
   customer: string;
   quantity: {number: number; detail: string}[];
@@ -8,8 +8,11 @@ export interface DataType {
   image?: string | null;
   localImage?: string | null;
   price: number;
-  description: string;
   delivery: string;
+  description: string;
+  isDone: boolean;
+  createdOn: number;
+  editedOn: number;
 }
 
 export type quantity = {
