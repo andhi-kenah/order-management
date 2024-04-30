@@ -10,15 +10,15 @@ import { DarkColor, LightColor } from '../../colors/Colors';
 import FloatingButton from 'components/FloatingButton';
 
 type RootStackParamList = {
-    Customer: { customer: string };
-    CustomerDetail: undefined;
+    Customer: undefined;
+    CustomerDetail: { customer: string };
     OrderDetail: { item: DataType };
-    NewOrder: { customer: string }
+    NewOrder: { customer: string };
 };
 
 type Props = {
     navigation: StackNavigationProp<RootStackParamList, 'OrderDetail'>;
-    route: RouteProp<RootStackParamList, 'Customer'>;
+    route: RouteProp<RootStackParamList, 'CustomerDetail'>;
 };
 
 const CustomerDetail = ({ route, navigation }: Props) => {

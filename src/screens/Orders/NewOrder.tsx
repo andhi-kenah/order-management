@@ -2,6 +2,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Asset, OptionsCommon } from 'react-native-image-picker';
 import type { DataType } from '../../Data';
+
 import React, { useState } from 'react';
 import {
   TextInput,
@@ -12,6 +13,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
@@ -25,23 +27,23 @@ import { DarkColor, LightColor } from '../../colors/Colors';
 type RootStackParamList = {
   OrderList: undefined;
   OrderDetail: { item: DataType };
-  NewOrder: undefined;
-  CustomerDetail: { customer: string }
+  NewOrder: { customer: string };
+  CustomerDetail: undefined;
 };
 
 type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'OrderDetail'>;
-  route: RouteProp<RootStackParamList, 'CustomerDetail'>;
+  route?: RouteProp<RootStackParamList, 'NewOrder'>;
 };
 
-const NewOrder = ({ route, navigation }: Props) => {
+const NewOrder = ({ route }: Props) => {
   const isDark = useTheme();
-  const isConnected = useNetInfo()
+  const isConnected = useNetInfo();
+  const navigation = useNavigation();
 
 
   const [order, setOrder] = useState<DataType>({ // New Order State: Datatype
     name: '',
-    customer: route.params?.customer || '',
+    customer: route?.params.customer || '',
     hasImage: false,
     image: '',
     localImage: '',
