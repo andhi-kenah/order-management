@@ -1,4 +1,4 @@
-import type { DataType } from 'Data';
+import type { DataType } from 'Type';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -11,13 +11,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { DarkColor, LightColor } from 'colors/Colors';
+import useTheme from 'services/Theme';
 
 import Customers from 'screens/Customers/Customers';
 import Orders from 'screens/Orders/Orders';
 import OrderDetail from 'screens/Orders/OrderDetail';
 import CustomerDetail from 'screens/Customers/CustomerDetail';
 import NewOrder from 'screens/Orders/NewOrder';
-import useTheme from 'services/Theme';
 
 type RootTabParamList = {
   Orders: { item: DataType[] };
@@ -80,91 +80,91 @@ const App = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-        <StatusBar
-          translucent
-          backgroundColor={'transparent'}
-          barStyle={isDark ? 'light-content' : 'dark-content'}
-        />
-        <NavigationContainer
-          fallback={
-            <ActivityIndicator
-              size={'large'}
-              color={isDark ? DarkColor.Primary : LightColor.Primary}
-            />
-          }>
-          <Stack.Navigator
-            screenOptions={{
-              headerStyle: {
-                elevation: 1,
-                backgroundColor: isDark
-                  ? DarkColor.Background
-                  : LightColor.Background,
-              },
-              headerBackImage: () => (
+      <StatusBar
+        translucent
+        backgroundColor={'transparent'}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+      />
+      <NavigationContainer
+        fallback={
+          <ActivityIndicator
+            size={'large'}
+            color={isDark ? DarkColor.Primary : LightColor.Primary}
+          />
+        }>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: {
+              elevation: 1,
+              backgroundColor: isDark
+                ? DarkColor.Background
+                : LightColor.Background,
+            },
+            headerBackImage: () => (
+              <View
+                style={{
+                  backgroundColor: isDark
+                    ? DarkColor.Background
+                    : LightColor.Background,
+                  height: 34,
+                  width: 34,
+                  borderRadius: 50,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  elevation: 4,
+                }}>
+                <Icon
+                  name={'chevron-back'}
+                  color={
+                    isDark
+                      ? DarkColor.Text
+                      : LightColor.Text
+                  }
+                  size={22}
+                  style={{ marginRight: 2 }}
+                />
+              </View>
+            ),
+            headerPressColor: '#2222',
+          }}>
+          <Stack.Screen
+            name="Home"
+            component={HomeTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="OrderDetail"
+            component={OrderDetail}
+            options={{ headerTitle: '', headerTransparent: true }}
+          />
+          <Stack.Screen
+            name="CustomerDetail"
+            component={CustomerDetail}
+            options={{ headerTitle: '', headerTransparent: true }}
+          />
+          <Stack.Screen
+            name="NewOrder"
+            component={NewOrder}
+            options={{
+              presentation: 'card',
+              headerShown: false,
+              cardOverlay: () => (
                 <View
-                  style={{
-                    backgroundColor: isDark
-                      ? DarkColor.Background
-                      : LightColor.Background,
-                    height: 34,
-                    width: 34,
-                    borderRadius: 50,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    elevation: 4,
-                  }}>
-                  <Icon
-                    name={'chevron-back'}
-                    color={
-                      isDark
-                        ? DarkColor.Text
-                        : LightColor.Text
-                    }
-                    size={22}
-                    style={{ marginRight: 2 }}
-                  />
-                </View>
+                  style={{ backgroundColor: isDark ? '#333' : '#ccc', flex: 1 }}
+                />
               ),
-              headerPressColor: '#2222',
-            }}>
-            <Stack.Screen
-              name="Home"
-              component={HomeTabs}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="OrderDetail"
-              component={OrderDetail}
-              options={{ headerTitle: '', headerTransparent: true }}
-            />
-            <Stack.Screen
-              name="CustomerDetail"
-              component={CustomerDetail}
-              options={{ headerTitle: '', headerTransparent: true }}
-            />
-            <Stack.Screen
-              name="NewOrder"
-              component={NewOrder}
-              options={{
-                presentation: 'card',
-                headerShown: false,
-                cardOverlay: () => (
-                  <View
-                    style={{ backgroundColor: isDark ? '#333' : '#ccc', flex: 1 }}
-                  />
-                ),
-                cardStyle: {
-                  borderRadius: 10,
-                  marginTop: StatusBar.currentHeight
-                    ? StatusBar.currentHeight + 14
-                    : 14,
-                  marginBottom: 14,
-                  marginHorizontal: 14,
-                },
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
+              cardStyle: {
+                borderRadius: 10,
+                marginTop: StatusBar.currentHeight
+                  ? StatusBar.currentHeight + 14
+                  : 14,
+                marginBottom: 14,
+                marginHorizontal: 14,
+              },
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
     </SafeAreaView>
   );
 };

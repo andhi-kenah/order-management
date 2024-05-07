@@ -16,6 +16,7 @@ const SearchInput: React.FC<Props> = ({
   onChangeText
 }: Props) => {
   const isDark = useTheme();
+
   return (
     <View
       style={{
@@ -52,6 +53,7 @@ const SearchInput: React.FC<Props> = ({
             fontSize: 16,
             paddingVertical: 10,
             paddingLeft: 8,
+            color: isDark ? DarkColor.Text : LightColor.Text
           }}
         />
       </View>

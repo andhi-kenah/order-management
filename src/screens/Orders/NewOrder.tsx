@@ -1,7 +1,7 @@
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Asset, OptionsCommon } from 'react-native-image-picker';
-import type { DataType } from '../../Data';
+import type { DataType } from '../../Type';
 
 import React, { useState } from 'react';
 import {
@@ -11,7 +11,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
+  Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -27,7 +27,7 @@ import { DarkColor, LightColor } from '../../colors/Colors';
 type RootStackParamList = {
   OrderList: undefined;
   OrderDetail: { item: DataType };
-  NewOrder: { customer: string };
+  NewOrder: { customer?: string };
   CustomerDetail: undefined;
 };
 
@@ -40,10 +40,9 @@ const NewOrder = ({ route }: Props) => {
   const isConnected = useNetInfo();
   const navigation = useNavigation();
 
-
   const [order, setOrder] = useState<DataType>({ // New Order State: Datatype
     name: '',
-    customer: route?.params.customer || '',
+    customer: route?.params?.customer || '',
     hasImage: false,
     image: '',
     localImage: '',
@@ -54,25 +53,47 @@ const NewOrder = ({ route }: Props) => {
     editedOn: Date.now(),
     quantity: [{ number: 1, detail: '' }],
     done: [{ number: 0, detail: '' }],
-    isDone: false
+    isDone: false,
+    isUrgent: false
   });
   const [imageInfo, setImageInfo] = useState<{ asset: Asset[] | undefined, ref: string }>();
   const [numberInput, setNumberInput] = useState<number[]>([Date.now()]);
 
+  const option: OptionsCommon = {
+    mediaType: 'photo',
+    maxHeight: 600,
+    maxWidth: 600,
+    quality: 0.6
+  }
+
   const selectImage = () => {
-    const option: OptionsCommon = {
-      mediaType: 'photo',
-      maxHeight: 600,
-      maxWidth: 600,
-      quality: 0.6
-    }
-    launchImageLibrary(option, (response) => {
-      if (response.didCancel) {
+    launchImageLibrary(option, (res) => {
+      if (res.didCancel) {
         console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        console.log('ImagePicker Error: ', response.errorCode);
+      } else if (res.errorCode) {
+        console.log('ImagePicker Error: ', res.errorCode);
       } else {
-        const source = { uri: response.assets };
+        const source = { uri: res.assets };
+
+        setImageInfo({ asset: source.uri, ref: (Date.now() * (Math.floor(Math.random() * 99) + 1)).toString() });
+        setOrder({
+          ...order,
+          hasImage: true,
+          image: (Math.floor(Math.random() * 10000)).toString(),
+          localImage: source.uri ? source.uri[0].uri : ''
+        });
+      }
+    })
+  }
+
+  const takePhoto = () => {
+    launchCamera(option, (res) => {
+      if (res.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (res.errorCode) {
+        console.log('ImagePicker Error: ', res.errorCode);
+      } else {
+        const source = { uri: res.assets };
 
         setImageInfo({ asset: source.uri, ref: (Date.now() * (Math.floor(Math.random() * 99) + 1)).toString() });
         setOrder({
@@ -176,7 +197,7 @@ const NewOrder = ({ route }: Props) => {
               placeholder={'Nombre'}
               placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
               keyboardType={'number-pad'}
-              style={[styles.input, { textAlign: 'center' }]}
+              style={[styles.input, { textAlign: 'center', color: isDark ? DarkColor.Text : LightColor.Text }]}
               onChangeText={text => {
                 let quantity = order.quantity;
                 quantity[index].number = parseInt(text);
@@ -191,10 +212,10 @@ const NewOrder = ({ route }: Props) => {
             <TextInput
               placeholder={'Detail'}
               placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
-              style={[styles.input]}
+              style={[styles.input, {color: isDark ? DarkColor.Text : LightColor.Text}]}
               onChangeText={text => {
                 let quantity = order.quantity;
-                quantity[index].detail = text;
+                quantity[index].detail = text.trim();
                 let done = order.done;
                 done[index].detail = text.trim();
                 setOrder({
@@ -280,9 +301,14 @@ const NewOrder = ({ route }: Props) => {
               </View>
             )
           }
-          <TouchableOpacity onPress={selectImage}>
-            <Icon name={'image-outline'} size={28} color={isDark ? DarkColor.Secondary : LightColor.Secondary} style={{ textAlign: 'center' }} />
-          </TouchableOpacity>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: "center", gap: 10}}>
+            <TouchableOpacity onPress={takePhoto}>
+              <Icon name={'camera-outline'} size={28} color={isDark ? DarkColor.Secondary : LightColor.Secondary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={selectImage}>
+              <Icon name={'image-outline'} size={28} color={isDark ? DarkColor.Secondary : LightColor.Secondary} />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={{ marginBottom: 6 }}>
           <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text, fontWeight: 'bold' }}>Nom du produit :</Text>
@@ -295,7 +321,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                name: text
+                name: text.trim()
               })
             }}
           />
@@ -310,7 +336,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                customer: text
+                customer: text.trim()
               })
             }}
           />
@@ -353,7 +379,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                price: parseInt(text)
+                price: parseInt(text.trim())
               })
             }}
           />
@@ -368,7 +394,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                delivery: text
+                delivery: text.trim()
               })
             }}
           />
@@ -387,7 +413,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                description: text
+                description: text.trim()
               })
             }}
           />

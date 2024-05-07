@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import {
   View,
-  useColorScheme,
   StatusBar,
   TouchableOpacity,
   Text,
@@ -70,7 +69,10 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
           }
           <TouchableOpacity
             style={{
-              backgroundColor: isDark
+              backgroundColor: 
+              searchActive 
+              ? 'grey'
+              : isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
               height: 38,

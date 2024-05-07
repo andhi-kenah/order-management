@@ -1,5 +1,5 @@
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { DataType } from '../../Data';
+import type { DataType } from '../../Type';
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -7,11 +7,11 @@ import {
   Text,
   FlatList,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Image,
   TouchableOpacity
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 import useTheme from '../../services/Theme';
 import { DarkColor, LightColor } from '../../colors/Colors';
@@ -41,6 +41,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    console.log(items)
     setIsLoading(true);
     const subscriber = firestore()
       .collection('orders')
@@ -49,10 +50,10 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
         querySnapshot => {
           const data: DataType[] = [];
 
-          querySnapshot.forEach((documentSnapshot: any) => {
+          querySnapshot.forEach((doc: any) => {
             data.push({
-              ...documentSnapshot.data(),
-              key: documentSnapshot.id,
+              ...doc.data(),
+              key: doc.id,
             });
           });
 
@@ -87,10 +88,11 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
 
   const RenderItem = ({ data }: { data: DataType }) => {
     const setBackgroundColor = (): string => {
-      if (getDone(data.done) === getTotal(data.quantity)) {
-        return isDark ? '#232425' : '#f1fcf1';
+      if (getDone(data.done) === getTotal(data.quantity) || data.isDone) {
+
+        return isDark ? '#f1fcf133' : '#f1fcf1';
       } else {
-        return isDark ? DarkColor.ComponentColor : LightColor.Background;
+        return isDark ? '#232425' : LightColor.Background;
       }
     };
 
@@ -110,10 +112,10 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
         onPress={() => navigation.navigate('OrderDetail', { item: data })}>
         <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
           {
-            data.hasImage ?
+            data.hasImage && data.image ?
               (
                 <Image
-                  source={{uri: data.image ? data.image : ''}}
+                  source={{ uri: data.image }}
                   style={{
                     height: '100%',
                     width: 70,
@@ -137,12 +139,18 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
               style={{
                 color: isDark ? DarkColor.Text : LightColor.Text,
                 fontSize: 16,
-                fontFamily: 'sans-serif-medium',
+                fontFamily: 'sans-serif-medium'
               }}
               ellipsizeMode={'tail'}
               numberOfLines={2}
-              >
-              {data.name}
+            >
+              {data.name}{' '}{
+                (getDone(data.done) === getTotal(data.quantity) || data.isDone) &&
+                <Icon 
+                  name={'checkmark-circle'} 
+                  size={13}
+                  color={isDark ? DarkColor.Success : LightColor.Success} />
+              }{'\n'}
             </Text>
             <Text
               style={{
@@ -161,7 +169,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
         </View>
         <View
           style={{
-            flexDirection: 'row',
+            justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 10,
           }}>
@@ -170,7 +178,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
               fontWeight: 'bold',
               color:
                 getDone(data.done) == getTotal(data.quantity)
-                  ? 'green'
+                  ? isDark ? DarkColor.Success : LightColor.Success
                   : isDark
                     ? DarkColor.Primary
                     : LightColor.Primary,
@@ -188,7 +196,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
+    <View
       style={{
         flex: 1,
         backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
@@ -242,7 +250,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
           />
         </>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

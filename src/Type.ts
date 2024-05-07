@@ -11,6 +11,7 @@ export interface DataType {
   delivery: string;
   description: string;
   isDone: boolean;
+  isUrgent: boolean;
   createdOn: number;
   editedOn: number;
 }

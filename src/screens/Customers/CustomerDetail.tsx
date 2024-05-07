@@ -1,6 +1,6 @@
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import type { DataType } from 'Data';
+import type { DataType } from 'Type';
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StatusBar } from 'react-native';
@@ -40,6 +40,7 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                     querySnapshot.forEach((doc: any) => {
                         data.push({
                             ...doc.data(),
+                            key: doc.id,
                         });
                     });
                     setItems(data);
@@ -91,7 +92,7 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                                     marginHorizontal: 18,
                                     elevation: 4
                                 }}
-                                onPress={() => navigation.navigate('OrderDetail', { item: value })}>
+                                onPress={() => navigation.navigate('OrderDetail', { item: items[index] })}>
                                 <Text style={{ fontSize: 18, fontWeight: 'bold', color: isDark ? DarkColor.Text : LightColor.Text, marginBottom: 4 }}>{value.name}</Text>
                                 {
                                     value.quantity.map((q, i) => {
@@ -102,10 +103,10 @@ const CustomerDetail = ({ route, navigation }: Props) => {
                                                     alignItems: 'center',
                                                     gap: 4,
                                                     backgroundColor: value.done[i].number === q.number
-                                                        ? '#e4f3e4'
+                                                        ? isDark ? '#e4f3e4aa' : '#e4f3e4'
                                                         : isDark
-                                                            ? DarkColor.ComponentColor
-                                                            : LightColor.ComponentColor,
+                                                          ? DarkColor.ComponentColor
+                                                          : LightColor.ComponentColor,
                                                     borderRadius: 4,
                                                     padding: 6
                                                 }}>

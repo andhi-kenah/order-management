@@ -1,4 +1,4 @@
-import type {quantity} from '../Data';
+import type {quantity} from '../Type';
 
 export const getDeliveryDate = (
   data: string,

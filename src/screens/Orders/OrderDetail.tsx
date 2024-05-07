@@ -1,9 +1,10 @@
-import type { RouteProp } from '@react-navigation/native';
+import { DarkTheme, type RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { DataType, quantity } from '../../Data';
+import type { DataType, quantity } from '../../Type';
 
 import React, { memo, useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   Modal,
   ScrollView,
@@ -19,9 +20,10 @@ import firestore from '@react-native-firebase/firestore';
 import useTheme from '../../services/Theme';
 import { DarkColor, LightColor } from '../../colors/Colors';
 import FloatingButton from '../../components/FloatingButton';
-import { getDeliveryDate } from '../../services/Functions';
+import { getDeliveryDate, getDone, getTotal } from '../../services/Functions';
 
 type RootStackParamList = {
+  CustomerDetail: { item: DataType };
   OrderList: { item: DataType };
   OrderDetail: { item: DataType };
 };
@@ -35,24 +37,36 @@ const OrderDetail = ({ route, navigation }: Props) => {
   const isDark = useTheme();
   const { item } = route.params;
 
-  const [isChange, setChange] = useState<boolean>(false);
+  const [isChange, setChange] = useState(false);
   const [changeDone, setChangeDone] = useState<number[]>(
     Array.from({ length: item.done.length }, () => 0),
   );
 
-  const [isEdit, setEdit] = useState<boolean>(false);
-  const [fullScreen, setFullScreen] = useState<boolean>(false);
+  const [isEdit, setEdit] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
+  const [isFinish, setFinish] = useState(false);
 
   const handleEdit = async () => {
     if (isEdit) {
+      let alsoEditDoneDetail = item.done
+      for (let range in alsoEditDoneDetail) {
+        alsoEditDoneDetail[range]['detail'] = item.quantity[range].detail.trim();
+      }
+
       firestore()
         .collection('orders')
         .doc(item.key)
         .update({
-          // editedOn: 
+          name: item.name.trim(),
+          customer: item.customer.trim(),
+          quantity: item.quantity,
+          done: alsoEditDoneDetail,
+          localImage: item.localImage || null,
+          price: isNaN(item.price) ? 0 : item.price,
+          description: item.description.trim(),
+          delivery: item.delivery.trim(),
+          editedOn: item.editedOn,
         })
-      console.log(item.createdOn);
-      console.log(item.editedOn);
       setEdit(false);
     } else {
       setEdit(true)
@@ -85,11 +99,62 @@ const OrderDetail = ({ route, navigation }: Props) => {
     }
   };
 
+  
   const handleDelete = () => {
-    firestore().collection('orders').doc(item.key).delete();
+    const deleteOrder = () => {
+      firestore().collection('orders').doc(item.key).delete();
+      navigation.goBack();
+    }
+    Alert.alert(
+      'Supprimer', 'Voulez-vous vraiment supprimer cette commande ?', 
+      [
+        { isPreferred: false, style: 'cancel', text: 'Annuler' },
+        { isPreferred: true, onPress: deleteOrder, style: 'destructive', text: 'Supprimer' },
+      ], 
+      { 
+        cancelable: true, 
+        userInterfaceStyle: isDark ? 'dark' : 'light',
+      }
+    )
   };
 
+  const handleFinish = () => {
+    const finishOrder = () => {
+      if (isFinish) {
+        firestore().collection('orders').doc(item.key).update({
+          isDone: false
+        });
+        setFinish(false);
+        setEdit(false);
+      } else {
+        firestore().collection('orders').doc(item.key).update({
+          isDone: true
+        });
+        setFinish(true);
+        setEdit(false);
+      }
+    }
+    Alert.alert(
+      'Terminer la commande', 'Voulez-vous vraiment terminer cette commande ?', 
+      [
+        { isPreferred: false, style: 'cancel', text: 'Annuler' },
+        { isPreferred: true, onPress: finishOrder, style: 'default', text: 'Terminer' },
+      ], 
+      { 
+        cancelable: true, 
+        userInterfaceStyle: isDark ? 'dark' : 'light',
+      }
+    )
+  };
+
+  const detectFinish = () => {
+    const getFinish = getDone(item.done) === getTotal(item.quantity);
+    setFinish(getFinish || item.isDone);
+    return getFinish;
+  }
+
   useEffect(() => {
+    detectFinish();
     let change = 0;
     for (let i = 0; i < changeDone.length; i++) {
       if (changeDone[i] !== 0) {
@@ -123,6 +188,8 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 ? DarkColor.Background
                 : LightColor.Background,
               borderRadius: 4,
+              borderWidth: 1,
+              borderColor: isDark ? DarkColor.ComponentColor : LightColor.ComponentColor,
               paddingVertical: 4,
               paddingLeft: 10,
               paddingRight: 8,
@@ -161,6 +228,8 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 ? DarkColor.Background
                 : LightColor.Background,
             borderRadius: 4,
+            borderWidth: 1,
+            borderColor: isDark ? DarkColor.ComponentColor : LightColor.ComponentColor,
             paddingVertical: 4,
             paddingLeft: 10,
             paddingRight: 8,
@@ -172,7 +241,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
             style={{
               color: isEdit
                 ? isDark
-                  ? DarkColor.Background
+                  ? DarkColor.Text
                   : LightColor.Background
                 : isDark
                   ? DarkColor.Text
@@ -186,7 +255,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
             color={
               isEdit
                 ? isDark
-                  ? DarkColor.Background
+                  ? DarkColor.Text
                   : LightColor.Background
                 : isDark
                   ? DarkColor.Text
@@ -227,6 +296,14 @@ const OrderDetail = ({ route, navigation }: Props) => {
         }
       };
 
+      const [bgColor, setBgColor] = useState(1)
+      const removeQuantity = () => {
+        bgColor === 1
+          ? setBgColor(0.4)
+          : setBgColor(1)
+      }
+
+
       return (
         <View
           style={{
@@ -234,6 +311,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
             alignItems: 'center',
             justifyContent: 'space-between',
             marginVertical: 4,
+            opacity: bgColor
           }}>
           <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
             <View
@@ -242,7 +320,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 alignItems: 'center',
                 backgroundColor:
                   done >= quantity.number
-                    ? '#e4f3e4'
+                    ? isDark ? '#e4f3e488' : '#e4f3e4'
                     : isDark
                       ? DarkColor.ComponentColor
                       : LightColor.ComponentColor,
@@ -271,7 +349,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 /
               </Text>
               <TextInput
-                editable={isEdit}
+                editable={isEdit && bgColor !== 0.4}
                 defaultValue={quantity.number.toString()}
                 onChangeText={text => (quantity.number = parseInt(text))}
                 style={{
@@ -287,12 +365,13 @@ const OrderDetail = ({ route, navigation }: Props) => {
               />
             </View>
             <TextInput
-              editable={isEdit}
+              editable={isEdit && bgColor !== 0.4}
               multiline={true}
               defaultValue={quantity.detail}
               onChangeText={text => (quantity.detail = text)}
               style={{
                 fontSize: 16,
+                textDecorationLine: bgColor < 1 ? 'line-through' : 'none',
                 color: isDark ? DarkColor.Text : LightColor.Text,
                 borderWidth: 1,
                 borderColor: isEdit ? 'lightgrey' : 'transparent',
@@ -319,6 +398,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                   borderRadius: 4,
                   padding: 4,
                   marginHorizontal: 8,
+                  opacity: done + changeDone[id] === 0 ? 0.4 : 1
                 }}
                 onPress={decrement}>
                 <Icon
@@ -342,20 +422,23 @@ const OrderDetail = ({ route, navigation }: Props) => {
                     : LightColor.ComponentColor,
                 borderRadius: 4,
                 padding: 4,
+                opacity: !isEdit ? done + changeDone[id] === quantity.number ? 0.4 : 1 : 1
               }}
-              onPress={increment}
-              onLongPress={incrementTen}>
+              onPress={() => !isEdit ? increment() : removeQuantity()}
+              onLongPress={() => !isEdit ? incrementTen() : null}>
               <Icon
-                name={!isEdit ? 'add-circle-outline' : 'close-circle-outline'}
+                name={!isEdit ? 'add-circle-outline' : bgColor < 1 ? 'arrow-undo-circle-outline' : 'close-circle-outline'}
                 size={28}
                 color={
                   !isEdit
                     ? isDark
                       ? DarkColor.Background
                       : LightColor.Background
-                    : isDark
-                      ? DarkColor.Danger
-                      : LightColor.Danger
+                    : bgColor < 1
+                      ? LightColor.Text
+                      : isDark
+                        ? DarkColor.Danger
+                        : LightColor.Danger
                 }
               />
             </TouchableOpacity>
@@ -485,6 +568,26 @@ const OrderDetail = ({ route, navigation }: Props) => {
             }}
           />
 
+        {
+            isFinish &&
+            <View style={{
+                backgroundColor: isDark ? DarkColor.Success : LightColor.Success,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 4,
+                borderRadius: 4,
+                paddingVertical: 4,
+                margin: 'auto',
+                marginTop: 6
+              }}>
+              <Icon name={'checkmark-circle'} size={22} color={isDark ? DarkColor.Text : LightColor.Background} />
+              <Text style={{color: isDark ? DarkColor.Text : LightColor.Background, fontSize: 18, fontWeight: 'bold', opacity: 0.9}}>
+                Terminé
+              </Text>
+            </View>
+          }
+
           <View style={{ marginVertical: 20 }}>
             <View
               style={{
@@ -581,6 +684,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
             <TextInput
               multiline={true}
               defaultValue={item.description}
+              onChangeText={text => (item.description = text)}
               autoCorrect={false}
               keyboardAppearance={isDark ? 'dark' : 'light'}
               editable={isEdit}
@@ -630,10 +734,11 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 elevation: 2,
-              }}>
+              }}
+              onPress={handleFinish}>
               <Icon name={'checkmark-done'} color={'white'} size={18} />
               <Text style={{ fontSize: 16, color: 'white', marginLeft: 10 }}>
-                Terminer la commande
+                {isFinish ? 'Reprendre' : 'Terminer'} la commande
               </Text>
             </TouchableOpacity>
           </View>
