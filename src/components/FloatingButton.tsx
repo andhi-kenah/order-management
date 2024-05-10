@@ -21,8 +21,8 @@ const FloatingButton: React.FC<Props> = ({
       style={{
         backgroundColor,
         position: 'absolute',
-        bottom: 20,
-        right: 20,
+        bottom: 18,
+        right: 18,
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: 40,
@@ -31,7 +31,7 @@ const FloatingButton: React.FC<Props> = ({
       }}
       onPress={onPress}>
       {title && <Text style={{ fontSize: 16, color: 'white', marginLeft: 8, marginRight: 8 }}>{title}</Text>}
-      <Icon name={icon} size={title ? 28 : 34} color={LightColor.Background} style={{ marginRight: title ? 6 : 0 }} />
+      <Icon name={icon} size={title ? 28 : 30} color={LightColor.Background} style={{ marginRight: title ? 6 : 0 }} />
     </TouchableOpacity>
   );
 };

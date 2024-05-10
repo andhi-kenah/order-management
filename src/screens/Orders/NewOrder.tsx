@@ -1,5 +1,4 @@
 import type { RouteProp } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
 import type { Asset, OptionsCommon } from 'react-native-image-picker';
 import type { DataType } from '../../Type';
 
@@ -79,7 +78,7 @@ const NewOrder = ({ route }: Props) => {
         setOrder({
           ...order,
           hasImage: true,
-          image: (Math.floor(Math.random() * 10000)).toString(),
+          // image: (Math.floor(Math.random() * 10000)).toString(),
           localImage: source.uri ? source.uri[0].uri : ''
         });
       }
@@ -99,7 +98,7 @@ const NewOrder = ({ route }: Props) => {
         setOrder({
           ...order,
           hasImage: true,
-          image: (Math.floor(Math.random() * 10000)).toString(),
+          // image: (Math.floor(Math.random() * 10000)).toString(),
           localImage: source.uri ? source.uri[0].uri : ''
         });
       }
@@ -127,8 +126,8 @@ const NewOrder = ({ route }: Props) => {
   const handleSubmit = async () => {
     try {
       let downloadUrl: string = '';
-
-      if (order.hasImage && !isConnected.isConnected) {
+      
+      if (order.hasImage && isConnected.isConnected) {
         const ref = storage().ref('images/' + imageInfo?.ref);
         const task = await ref.putFile(imageInfo?.asset?.[0].uri ? imageInfo.asset?.[0].uri : '');
         switch (task.state) {
@@ -153,6 +152,7 @@ const NewOrder = ({ route }: Props) => {
         downloadUrl = await storage().ref('images/' + imageInfo?.ref).getDownloadURL();
       }
 
+      
       firestore()
         .collection('orders')
         .add({
@@ -321,7 +321,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                name: text.trim()
+                name: text
               })
             }}
           />
@@ -336,7 +336,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                customer: text.trim()
+                customer: text
               })
             }}
           />
@@ -394,7 +394,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                delivery: text.trim()
+                delivery: text
               })
             }}
           />
@@ -413,7 +413,7 @@ const NewOrder = ({ route }: Props) => {
             onChangeText={text => {
               setOrder({
                 ...order,
-                description: text.trim()
+                description: text
               })
             }}
           />

@@ -91,7 +91,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
           flex: 1,
           flexDirection: 'row',
           justifyContent: 'space-between',
-          backgroundColor: isDark ? DarkColor.ComponentColor : LightColor.Background,
+          backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
           borderRadius: 8,
           marginVertical: 6,
           marginHorizontal: 18,
@@ -133,7 +133,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
     <KeyboardAvoidingView
       style={{
         flex: 1,
-        backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
+        backgroundColor: isDark ? DarkColor.Background : LightColor.BackgroundTwo,
       }}>
       <Header
         title={'Clients'}

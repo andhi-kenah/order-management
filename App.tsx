@@ -27,6 +27,7 @@ type RootTabParamList = {
 type RootStackParamList = {
   Home: undefined;
   OrderDetail: { item: DataType };
+  OrderImage: { image: string | undefined };
   CustomerDetail: { customer: string };
   NewOrder: { item: string };
 };
@@ -44,13 +45,14 @@ const HomeTabs = () => {
         tabBarActiveTintColor: isDark ? DarkColor.Primary : LightColor.Primary,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 50,
+          height: 56,
           backgroundColor: isDark
             ? DarkColor.Background
             : LightColor.Background,
+          borderColor: '#6662'
         },
         tabBarLabel: route.name === 'Orders' ? 'Commandes' : 'Clients',
-        tabBarLabelStyle: { fontSize: 14, fontWeight: 'normal', margin: 4 },
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', margin: 2 },
         tabBarLabelPosition: 'below-icon',
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = 'home';
@@ -62,7 +64,7 @@ const HomeTabs = () => {
           return (
             <Icon
               name={iconName}
-              size={32}
+              size={34}
               color={color}
               style={{ marginBottom: -12 }}
             />
@@ -83,7 +85,8 @@ const App = () => {
       <StatusBar
         translucent
         backgroundColor={'transparent'}
-        barStyle={isDark ? 'light-content' : 'dark-content'}
+        // barStyle={isDark ? 'light-content' : 'dark-content'}
+        barStyle={'light-content'}
       />
       <NavigationContainer
         fallback={
@@ -114,14 +117,14 @@ const App = () => {
                   elevation: 4,
                 }}>
                 <Icon
-                  name={'chevron-back'}
+                  name={'arrow-back'}
                   color={
                     isDark
                       ? DarkColor.Text
                       : LightColor.Text
                   }
-                  size={22}
-                  style={{ marginRight: 2 }}
+                  size={20}
+                  style={{ marginLeft: 0 }}
                 />
               </View>
             ),
@@ -146,21 +149,7 @@ const App = () => {
             name="NewOrder"
             component={NewOrder}
             options={{
-              presentation: 'card',
               headerShown: false,
-              cardOverlay: () => (
-                <View
-                  style={{ backgroundColor: isDark ? '#333' : '#ccc', flex: 1 }}
-                />
-              ),
-              cardStyle: {
-                borderRadius: 10,
-                marginTop: StatusBar.currentHeight
-                  ? StatusBar.currentHeight + 14
-                  : 14,
-                marginBottom: 14,
-                marginHorizontal: 14,
-              },
             }}
           />
         </Stack.Navigator>

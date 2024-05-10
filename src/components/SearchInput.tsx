@@ -38,22 +38,23 @@ const SearchInput: React.FC<Props> = ({
         <Icon
           name={'search'}
           size={20}
-          color={'grey'}
+          color={'lightgrey'}
           style={{marginHorizontal: 6}}
         />
         <TextInput
           placeholder={title}
-          placeholderTextColor={isDark ? DarkColor.Secondary : LightColor.Secondary}
+          placeholderTextColor={DarkColor.Secondary}
           inputMode="search"
           value={value}
           onChangeText={onChangeText}
           underlineColorAndroid={'transparent'}
+          cursorColor={DarkColor.Text}
           style={{
             flex: 1,
             fontSize: 16,
             paddingVertical: 10,
             paddingLeft: 8,
-            color: isDark ? DarkColor.Text : LightColor.Text
+            color: DarkColor.Text,
           }}
         />
       </View>

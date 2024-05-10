@@ -41,7 +41,6 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    console.log(items)
     setIsLoading(true);
     const subscriber = firestore()
       .collection('orders')
@@ -112,19 +111,10 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
         onPress={() => navigation.navigate('OrderDetail', { item: data })}>
         <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
           {
-            data.hasImage && data.image ?
+          data.hasImage && data.image &&
               (
                 <Image
                   source={{ uri: data.image }}
-                  style={{
-                    height: '100%',
-                    width: 70,
-                    backgroundColor: isDark
-                      ? DarkColor.ComponentColor
-                      : LightColor.ComponentColor,
-                  }} />
-              ) : (
-                <View
                   style={{
                     height: '100%',
                     width: 70,
@@ -235,7 +225,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
               <RenderItem data={item} key={item.key} />
             )}
             keyExtractor={(item, index) => index.toString()}
-            style={{ marginTop: 4 }}
+            style={{ paddingTop: 10, backgroundColor: isDark ? DarkColor.Background : LightColor.BackgroundTwo }}
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps={'handled'}
             keyboardDismissMode={'on-drag'}

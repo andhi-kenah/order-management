@@ -1,4 +1,4 @@
-import { DarkTheme, type RouteProp } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { DataType, quantity } from '../../Type';
 
@@ -12,7 +12,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  Platform,
+  UIManager,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
@@ -26,12 +28,19 @@ type RootStackParamList = {
   CustomerDetail: { item: DataType };
   OrderList: { item: DataType };
   OrderDetail: { item: DataType };
+  OrderImage: { image: string | undefined };
 };
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'OrderDetail'>;
   route: RouteProp<RootStackParamList, 'OrderDetail'>;
 };
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 const OrderDetail = ({ route, navigation }: Props) => {
   const isDark = useTheme();
@@ -99,20 +108,20 @@ const OrderDetail = ({ route, navigation }: Props) => {
     }
   };
 
-  
+
   const handleDelete = () => {
     const deleteOrder = () => {
       firestore().collection('orders').doc(item.key).delete();
       navigation.goBack();
     }
     Alert.alert(
-      'Supprimer', 'Voulez-vous vraiment supprimer cette commande ?', 
+      'Supprimer', 'Voulez-vous vraiment supprimer cette commande ?',
       [
         { isPreferred: false, style: 'cancel', text: 'Annuler' },
         { isPreferred: true, onPress: deleteOrder, style: 'destructive', text: 'Supprimer' },
-      ], 
-      { 
-        cancelable: true, 
+      ],
+      {
+        cancelable: true,
         userInterfaceStyle: isDark ? 'dark' : 'light',
       }
     )
@@ -135,13 +144,14 @@ const OrderDetail = ({ route, navigation }: Props) => {
       }
     }
     Alert.alert(
-      'Terminer la commande', 'Voulez-vous vraiment terminer cette commande ?', 
+      ((isFinish || getTotal(item.quantity) === getDone(item.done)) ? 'Reprendre' : 'Terminer') + ' la commande',
+      'Voulez-vous vraiment ' + ((isFinish || getTotal(item.quantity) === getDone(item.done)) ? 'reprendre' : 'terminer') + ' cette commande ?',
       [
         { isPreferred: false, style: 'cancel', text: 'Annuler' },
-        { isPreferred: true, onPress: finishOrder, style: 'default', text: 'Terminer' },
-      ], 
-      { 
-        cancelable: true, 
+        { isPreferred: true, onPress: finishOrder, style: 'default', text: (isFinish || getTotal(item.quantity) === getDone(item.done)) ? 'Reprendre' : 'Terminer' },
+      ],
+      {
+        cancelable: true,
         userInterfaceStyle: isDark ? 'dark' : 'light',
       }
     )
@@ -452,20 +462,24 @@ const OrderDetail = ({ route, navigation }: Props) => {
     <View
       style={{
         flex: 1,
-        backgroundColor: isDark ? DarkColor.Background : LightColor.Background,
+        backgroundColor: isDark ? DarkColor.Background : LightColor.BackgroundTwo,
       }}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       {headerRight()}
       <ScrollView>
         <View
           style={{
             height: item.hasImage ? 'auto' : 70,
-            backgroundColor: isDark
-              ? DarkColor.Background
-              : LightColor.Background,
+            backgroundColor: item.hasImage
+              ? isDark
+                ? DarkColor.BackgroundTwo
+                : LightColor.Background
+              : isDark
+                ? DarkColor.PrimaryTwo
+                : LightColor.PrimaryTwo
           }}>
           {item.hasImage && (
             <TouchableOpacity
+              disabled={isEdit ? true : false}
               style={{
                 position: 'absolute',
                 bottom: 10,
@@ -479,6 +493,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 elevation: 4,
+                opacity: isEdit ? 0 : 1,
                 zIndex: 100
               }}
               onPress={() => setFullScreen(true)}>
@@ -496,99 +511,116 @@ const OrderDetail = ({ route, navigation }: Props) => {
           {/* {item.localImage && <Image source={{ uri: item.localImage }} style={{ width: '100%', height: 280 }} />} */}
           {item.image && <Image source={{ uri: item.image }} style={{ width: '100%', height: 280 }} />}
         </View>
-        <View style={{ paddingHorizontal: 16 }}>
-          <TextInput
-            editable={isEdit}
-            defaultValue={item.name}
-            multiline={true}
-            style={{
-              color: isDark ? DarkColor.Text : LightColor.Text,
-              fontSize: 22,
-              fontWeight: 'bold',
-              textAlign: 'center',
-              borderWidth: 1,
-              borderColor: isEdit ? '#5552' : 'transparent',
-              borderRadius: 4,
-              paddingTop: 0,
-              paddingBottom: 0,
-              marginVertical: 6,
-            }}
-          />
-
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
+        
+        <View>
+          <View style={{
+              backgroundColor: 
+                item.hasImage
+                  ? isDark ? DarkColor.BackgroundTwo : LightColor.Background
+                  : isDark ? DarkColor.PrimaryTwo : LightColor.PrimaryTwo,
+              paddingHorizontal: 16
             }}>
             <TextInput
               editable={isEdit}
-              autoCorrect={false}
-              defaultValue={item.customer}
-              onChangeText={text => (item.customer = text)}
+              defaultValue={item.name}
+              multiline={true}
               style={{
-                color: isDark ? DarkColor.Text : LightColor.Text,
-                textAlign: 'right',
-                padding: 0,
+                color: item.hasImage
+                  ? isDark ? DarkColor.Text : LightColor.Text
+                  : DarkColor.Text,
+                fontSize: 22,
+                fontWeight: 'bold',
+                textAlign: 'center',
                 borderWidth: 1,
-                borderColor: isEdit ? 'lightgrey' : 'transparent',
+                borderColor: isEdit ? '#5552' : 'transparent',
                 borderRadius: 4,
-                paddingHorizontal: 8,
+                paddingTop: 0,
+                paddingBottom: 0,
+                marginVertical: 6,
               }}
             />
-            <Text style={{ color: isDark ? DarkColor.Text : LightColor.Text }}>-</Text>
-            <TextInput
-              editable={isEdit}
-              autoCorrect={false}
-              defaultValue={
-                isEdit
-                  ? item.price.toString()
-                  : (item.price / 1000).toString() + 'K'
-              }
-              onChangeText={text => (item.price = parseInt(text))}
+
+            <View
               style={{
-                color: isDark ? DarkColor.Text : LightColor.Text,
-                textAlign: 'left',
-                padding: 0,
-                borderWidth: 1,
-                borderColor: isEdit ? 'lightgrey' : 'transparent',
-                borderRadius: 4,
-                paddingHorizontal: 8,
-              }}
-            />
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingBottom: 4
+              }}>
+              <TextInput
+                editable={isEdit}
+                autoCorrect={false}
+                defaultValue={item.customer}
+                onChangeText={text => (item.customer = text)}
+                style={{
+                  color: item.hasImage
+                    ? isDark ? DarkColor.Text : LightColor.Text
+                    : DarkColor.Text,
+                  textAlign: 'right',
+                  padding: 0,
+                  borderWidth: 1,
+                  borderColor: isEdit ? 'lightgrey' : 'transparent',
+                  borderRadius: 4,
+                  paddingHorizontal: 8,
+                }}
+              />
+              <Text style={{
+                color: item.hasImage
+                  ? isDark ? DarkColor.Text : LightColor.Text
+                  : DarkColor.Text,
+                }}>
+                  -
+              </Text>
+              <TextInput
+                editable={isEdit}
+                autoCorrect={false}
+                defaultValue={
+                  isEdit
+                    ? item.price.toString()
+                    : (item.price / 1000).toString() + 'K'
+                }
+                onChangeText={text => (item.price = parseInt(text))}
+                style={{
+                  color: item.hasImage
+                    ? isDark ? DarkColor.Text : LightColor.Text
+                    : DarkColor.Text,
+                  textAlign: 'left',
+                  padding: 0,
+                  borderWidth: 1,
+                  borderColor: isEdit ? 'lightgrey' : 'transparent',
+                  borderRadius: 4,
+                  paddingHorizontal: 8,
+                }}
+              />
+            </View>
           </View>
 
-          <View
-            style={{
-              height: 2,
-              backgroundColor: isDark
-                ? DarkColor.ComponentColor
-                : LightColor.ComponentColor,
-              marginVertical: 4,
-            }}
-          />
-
-        {
-            isFinish &&
+          {
+            (isFinish || getTotal(item.quantity) === getDone(item.done)) &&
             <View style={{
-                backgroundColor: isDark ? DarkColor.Success : LightColor.Success,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 4,
-                borderRadius: 4,
-                paddingVertical: 4,
-                margin: 'auto',
-                marginTop: 6
-              }}>
+              backgroundColor: isDark ? DarkColor.Success : LightColor.Success,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 4,
+              paddingVertical: 4,
+              margin: 'auto',
+            }}>
               <Icon name={'checkmark-circle'} size={22} color={isDark ? DarkColor.Text : LightColor.Background} />
-              <Text style={{color: isDark ? DarkColor.Text : LightColor.Background, fontSize: 18, fontWeight: 'bold', opacity: 0.9}}>
+              <Text style={{ color: isDark ? DarkColor.Text : LightColor.Background, fontSize: 18, fontWeight: 'bold', opacity: 0.9 }}>
                 Terminé
               </Text>
             </View>
           }
 
-          <View style={{ marginVertical: 20 }}>
+          <View 
+            style={{ 
+              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background, 
+              paddingHorizontal: 16,
+              paddingTop: 10,
+              paddingBottom: 4,
+              marginVertical: 14
+              }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -619,13 +651,45 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 />
               );
             })}
+            <View style={{ alignItems: 'center' }}>
+              <TouchableOpacity
+                // disabled={order.quantity.length > 9}
+                disabled={isEdit ? false : true}
+                activeOpacity={0.8}
+                style={{
+                  backgroundColor:
+                    item.quantity.length > 9
+                      ? 'lightgrey'
+                      : isDark
+                        ? DarkColor.Primary
+                        : LightColor.Primary,
+                  borderRadius: 4,
+                  paddingHorizontal: 10,
+                  margin: 'auto',
+                  opacity: isEdit ? 1 : 0
+                }}
+              // onPress={() => {
+              //   setNumberInput([...numberInput, Date.now()]);
+              //   setOrder({
+              //     ...order,
+              //     quantity: [...order.quantity, { number: 0, detail: '' }],
+              //     done: [...order.done, { number: 0, detail: '' }],
+              //   })
+              // }}
+              >
+                <Icon name={'add'} color={'white'} size={30} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              marginVertical: 20,
+              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              marginBottom: 14
             }}>
             <Icon
               name={'calendar-outline'}
@@ -660,7 +724,11 @@ const OrderDetail = ({ route, navigation }: Props) => {
               }}
             />
           </View>
-          <View style={{ marginVertical: 10 }}>
+          <View style={{
+              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+            }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -738,7 +806,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
               onPress={handleFinish}>
               <Icon name={'checkmark-done'} color={'white'} size={18} />
               <Text style={{ fontSize: 16, color: 'white', marginLeft: 10 }}>
-                {isFinish ? 'Reprendre' : 'Terminer'} la commande
+                {(isFinish || getTotal(item.quantity) === getDone(item.done)) ? 'Reprendre' : 'Terminer'} la commande
               </Text>
             </TouchableOpacity>
           </View>
@@ -760,8 +828,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 : LightColor.Background,
             }}>
             {/* {item.localImage && <Image source={{ uri: item.localImage }} style={{ width: '100%', height: '100%' }} resizeMode='contain' />} */}
-            {item.image && <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%' }} resizeMode='contain' />}
-
+            {item.image && <Image source={{ uri: item.image ? item.image : item.localImage?.toString() }} style={[{ width: '100%', height: '100%' }]} resizeMode='contain' />}
             <TouchableOpacity
               style={{
                 position: 'absolute',

@@ -1,13 +1,16 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StatusBar,
   TouchableOpacity,
   Text,
+  Platform, 
+  UIManager, 
+  LayoutAnimation
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import useTheme from '../services/Theme';
-import {DarkColor, LightColor} from '../colors/Colors';
+import { DarkColor, LightColor } from '../colors/Colors';
 import SearchInput from './SearchInput';
 
 type Props = {
@@ -21,7 +24,13 @@ type Props = {
   onFilter?: () => void;
 };
 
-const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searchValue, onChangeText, hasFilter}: Props) => {
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
+
+const Header: React.FC<Props> = ({ title, onPressSearchButton, searchTitle, searchValue, onChangeText, hasFilter }: Props) => {
   const isDark = useTheme();
 
   const [searchActive, setSearchActive] = useState<boolean>(false);
@@ -29,21 +38,23 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
   return (
     <View
       style={{
-        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 16,
-        paddingBottom: 4,
-        marginHorizontal: 18,
-        marginBottom: 4
+        backgroundColor: isDark ? DarkColor.PrimaryTwo : LightColor.Primary,
+        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 12,
+        paddingBottom: 12,
+        paddingHorizontal: 18,
+        marginBottom: 0,
+        elevation: 4
       }}>
-      <Text style={{fontSize: 22, fontWeight: 'bold', color: isDark ? DarkColor.Text : LightColor.Text}} numberOfLines={1}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', color: DarkColor.Text }} numberOfLines={1}>
         {title}
       </Text>
       <View
         style={{
           position: 'absolute',
-          top: StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 12,
-          right: 0,
+          top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 10,
+          right: 18,
         }}>
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {
             hasFilter &&
             <TouchableOpacity
@@ -59,34 +70,32 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
               }}>
               <Icon
                 name={'funnel'}
-                color={
-                  isDark ? DarkColor.Text : LightColor.Text
-                }
+                color={DarkColor.Text}
                 size={18}
-                style={{marginTop: 4}}
+                style={{ marginTop: 4 }}
               />
             </TouchableOpacity>
           }
           <TouchableOpacity
             style={{
-              backgroundColor: 
-              searchActive 
-              ? 'grey'
-              : isDark
-                ? DarkColor.ComponentColor
-                : LightColor.ComponentColor,
+              backgroundColor:
+                searchActive
+                  ? isDark
+                    ? DarkColor.PrimaryTwo
+                    : LightColor.PrimaryTwo
+                  : isDark
+                    ? DarkColor.ComponentColor
+                    : LightColor.ComponentColor,
               height: 38,
               width: 38,
               borderRadius: 50,
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onPress={() => {onPressSearchButton(); setSearchActive(!searchActive)}}>
+            onPress={() => { setSearchActive(!searchActive); LayoutAnimation.configureNext(LayoutAnimation.Presets.spring); onPressSearchButton() }}>
             <Icon
               name={'search'}
-              color={
-                isDark ? DarkColor.Text : LightColor.Text
-              }
+              color={DarkColor.Text}
               size={22}
             />
           </TouchableOpacity>
@@ -94,7 +103,7 @@ const Header: React.FC<Props> = ({title, onPressSearchButton, searchTitle, searc
       </View>
       {
         searchActive &&
-        <View style={{marginTop: 20}}>
+        <View style={{ marginTop: 14 }}>
           <SearchInput title={searchTitle} value={searchValue} onChangeText={onChangeText} />
         </View>
       }

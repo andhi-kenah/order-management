@@ -5,8 +5,8 @@ export interface DataType {
   quantity: {number: number; detail: string}[];
   done: {number: number; detail: string}[];
   hasImage: boolean;
-  image?: string | null;
-  localImage?: string | null;
+  image?: string | undefined;
+  localImage?: string | undefined;
   price: number;
   delivery: string;
   description: string;
