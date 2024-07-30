@@ -8,7 +8,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useColorScheme,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -84,7 +83,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
     setIsLoading(false);
   };
 
-  const RenderItem = ({data}: {data: string}) => {
+  const RenderItem = ({customer}: {customer: string}) => {
     return (
       <TouchableOpacity
         style={{
@@ -97,7 +96,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
           marginHorizontal: 18,
           elevation: 4
         }}
-        onPress={() => navigation.navigate('CustomerDetail', {customer: data})}>
+        onPress={() => navigation.navigate('CustomerDetail', {customer})}>
         <View style={{flex: 2, flexDirection: 'row', alignItems: 'center'}}>
           <View
             style={{
@@ -121,7 +120,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
               }}
               ellipsizeMode="tail"
               numberOfLines={2}>
-              {data}
+              {customer}
             </Text>
           </View>
         </View>
@@ -137,7 +136,7 @@ const Customers: React.FC<Prop> = ({navigation}) => {
       }}>
       <Header
         title={'Clients'}
-        searchTitle={'Rechercher un produit'}
+        searchTitle={'Rechercher un client'}
         searchValue={search}
         onPressSearchButton={() => {
           setSearchMode(false);
@@ -166,17 +165,17 @@ const Customers: React.FC<Prop> = ({navigation}) => {
           <FlatList
             data={searchMode ? searchResult : items}
             renderItem={({item}: {item: string}) => (
-              <RenderItem data={item} />
+              <RenderItem customer={item} />
             )}
             keyExtractor={(_, index) => index.toString()}
-            style={{marginTop: 4}}
+            style={{paddingTop: 10}}
             contentContainerStyle={{flexGrow: 1}}
             keyboardShouldPersistTaps={'handled'}
             keyboardDismissMode={'on-drag'}
             ListHeaderComponentStyle={{marginBottom: 10}}
             ListFooterComponent={<View style={{height: 80}} />}
             ListEmptyComponent={
-              <EmptyList searchMode={searchMode} searchValue={search} />
+              <EmptyList searchMode={searchMode} searchValue={'Il n\'y a pas de "' + search + '" dans la liste du client'} />
             }
           />
           <FloatingButton

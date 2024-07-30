@@ -20,7 +20,7 @@ type Props = {
   searchValue: string;
   onChangeText: (text: string) => void;
   hasFilter: boolean;
-  filter?: string;
+  filter?: string; // filter is optional
   onFilter?: () => void;
 };
 
@@ -38,7 +38,7 @@ const Header: React.FC<Props> = ({ title, onPressSearchButton, searchTitle, sear
   return (
     <View
       style={{
-        backgroundColor: isDark ? DarkColor.PrimaryTwo : LightColor.Primary,
+        backgroundColor: isDark ? DarkColor.Primary : LightColor.Primary,
         paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 12,
         paddingBottom: 12,
         paddingHorizontal: 18,
@@ -54,59 +54,63 @@ const Header: React.FC<Props> = ({ title, onPressSearchButton, searchTitle, sear
           top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 10,
           right: 18,
         }}>
+
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {
             hasFilter &&
             <TouchableOpacity
               style={{
                 backgroundColor: isDark
-                  ? DarkColor.ComponentColor
-                  : LightColor.ComponentColor,
-                height: 38,
-                width: 38,
+                  ? DarkColor.Background
+                  : LightColor.Background,
+                height: 34,
+                width: 34,
                 borderRadius: 50,
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                elevation: 4
               }}>
               <Icon
                 name={'funnel'}
-                color={DarkColor.Text}
+                color={isDark ? DarkColor.Text : LightColor.Text}
                 size={18}
                 style={{ marginTop: 4 }}
               />
             </TouchableOpacity>
           }
+
           <TouchableOpacity
             style={{
               backgroundColor:
                 searchActive
-                  ? isDark
-                    ? DarkColor.PrimaryTwo
-                    : LightColor.PrimaryTwo
+                  ? isDark ? DarkColor.Secondary : LightColor.Secondary
                   : isDark
-                    ? DarkColor.ComponentColor
-                    : LightColor.ComponentColor,
-              height: 38,
-              width: 38,
+                    ? DarkColor.Background
+                    : LightColor.Background,
+              height: 34,
+              width: 34,
               borderRadius: 50,
               alignItems: 'center',
               justifyContent: 'center',
+              elevation: 4
             }}
             onPress={() => { setSearchActive(!searchActive); LayoutAnimation.configureNext(LayoutAnimation.Presets.spring); onPressSearchButton() }}>
             <Icon
               name={'search'}
-              color={DarkColor.Text}
+              color={isDark ? DarkColor.Text : LightColor.Text}
               size={22}
             />
           </TouchableOpacity>
         </View>
       </View>
+
       {
         searchActive &&
         <View style={{ marginTop: 14 }}>
           <SearchInput title={searchTitle} value={searchValue} onChangeText={onChangeText} />
         </View>
       }
+      
     </View>
   );
 };

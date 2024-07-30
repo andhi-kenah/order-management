@@ -18,7 +18,8 @@ import { DarkColor, LightColor } from '../../colors/Colors';
 import Header from '../../components/Header';
 import FloatingButton from 'components/FloatingButton';
 import EmptyList from '../../components/EmptyList';
-import { getDeliveryDate, getDone, getTotal } from '../../services/Functions';
+import { getDeliveryDate, getDeliveryLate, getDone, getTotal } from '../../services/Functions';
+import moment from 'moment';
 
 type OrderStackParamList = {
   OrderList: undefined;
@@ -87,13 +88,27 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
 
   const RenderItem = ({ data }: { data: DataType }) => {
     const setBackgroundColor = (): string => {
-      if (getDone(data.done) === getTotal(data.quantity) || data.isDone) {
 
-        return isDark ? '#f1fcf133' : '#f1fcf1';
+      if (getDone(data.done) === getTotal(data.quantity) || data.isDone) {
+        return isDark ? DarkColor.SuccessTwo : LightColor.SuccessTwo;
       } else {
-        return isDark ? '#232425' : LightColor.Background;
+        if (data.delivery) {
+          if (getDeliveryLate(data.delivery)) {
+            return isDark ? DarkColor.DangerTwo : LightColor.DangerTwo;
+          }
+        }
+        return isDark ? DarkColor.BackgroundTwo : LightColor.Background;
       }
     };
+
+    const setDeliveryTextColor = () => {
+      if (data.isDone || getDone(data.done) === getTotal(data.quantity)) {
+        return 'lightgrey';
+      }
+      if (getDeliveryLate(data.delivery)) {
+        return isDark ? DarkColor.Danger : LightColor.Danger;
+      }
+    }
 
     return (
       <TouchableOpacity
@@ -103,7 +118,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
           flexDirection: 'row',
           justifyContent: 'space-between',
           borderRadius: 8,
-          marginVertical: 6,
+          marginVertical: 8,
           marginHorizontal: 18,
           overflow: 'hidden',
           elevation: 4
@@ -111,18 +126,18 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
         onPress={() => navigation.navigate('OrderDetail', { item: data })}>
         <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center' }}>
           {
-          data.hasImage && data.image &&
-              (
-                <Image
-                  source={{ uri: data.image }}
-                  style={{
-                    height: '100%',
-                    width: 70,
-                    backgroundColor: isDark
-                      ? DarkColor.ComponentColor
-                      : LightColor.ComponentColor,
-                  }} />
-              )
+            data.hasImage && data.image &&
+            (
+              <Image
+                source={{ uri: data.image }}
+                style={{
+                  height: '100%',
+                  width: 70,
+                  backgroundColor: isDark
+                    ? DarkColor.ComponentColor
+                    : LightColor.ComponentColor,
+                }} />
+            )
           }
           <View style={{ flex: 1, paddingVertical: 16, paddingHorizontal: 12 }}>
             <Text
@@ -134,11 +149,22 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
               ellipsizeMode={'tail'}
               numberOfLines={2}
             >
-              {data.name}{' '}{
+              
+              {data.name}
+              {' '}
+              {
+                (data.isUrgent) &&
+                <Icon
+                  name={'alert-circle'}
+                  size={12}
+                  color={'goldenrod'} />
+              }
+              {' '}
+              {
                 (getDone(data.done) === getTotal(data.quantity) || data.isDone) &&
-                <Icon 
-                  name={'checkmark-circle'} 
-                  size={13}
+                <Icon
+                  name={'checkmark-circle'}
+                  size={12}
                   color={isDark ? DarkColor.Success : LightColor.Success} />
               }{'\n'}
             </Text>
@@ -150,9 +176,19 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
               ellipsizeMode={'tail'}
               numberOfLines={1}>
               {data.customer}
-              <Text style={{ color: 'lightgrey', fontFamily: 'sans-serif-thin' }}>
+              <Text
+                style={{
+                  color: 'grey',
+                  fontFamily: 'sans-serif-thin',
+                }}
+                >
                 {' - '}
-                {getDeliveryDate(data.delivery)}
+                <Text style={{
+                  color: setDeliveryTextColor(),
+                  fontWeight: getDeliveryLate(data.delivery) ? 'bold' : 'normal'
+                  }}>
+                  {getDeliveryDate(data.delivery)}
+                </Text>
               </Text>
             </Text>
           </View>
@@ -170,9 +206,12 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
                 getDone(data.done) == getTotal(data.quantity)
                   ? isDark ? DarkColor.Success : LightColor.Success
                   : isDark
-                    ? DarkColor.Primary
-                    : LightColor.Primary,
-              backgroundColor: isDark
+                    ? DarkColor.Text
+                    : LightColor.Text,
+              backgroundColor: 
+              data.isDone || getDone(data.done) == getTotal(data.quantity)
+              ? isDark ? DarkColor.BackgroundTwo : LightColor.Background
+              : isDark
                 ? DarkColor.ComponentColor
                 : LightColor.ComponentColor,
               borderRadius: 4,
@@ -231,7 +270,7 @@ const OrderList: React.FC<Prop> = ({ navigation }) => {
             keyboardDismissMode={'on-drag'}
             ListHeaderComponentStyle={{ marginBottom: 10 }}
             ListFooterComponent={<View style={{ height: 80 }} />}
-            ListEmptyComponent={<EmptyList searchMode={searchMode} searchValue={search} />}
+            ListEmptyComponent={<EmptyList searchMode={searchMode} searchValue={'Il n\'y a pas de "' + search + '" dans la liste de commande'} />}
           />
           <FloatingButton
             icon={'add'}

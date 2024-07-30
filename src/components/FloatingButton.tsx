@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { LightColor } from '../colors/Colors';
 
 type Props = {
-  title?: string;
+  title?: string; // title is optional
   icon: string;
   backgroundColor: string;
   onPress: () => void;

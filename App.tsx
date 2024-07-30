@@ -19,6 +19,7 @@ import OrderDetail from 'screens/Orders/OrderDetail';
 import CustomerDetail from 'screens/Customers/CustomerDetail';
 import NewOrder from 'screens/Orders/NewOrder';
 
+
 type RootTabParamList = {
   Orders: { item: DataType[] };
   Customers: undefined;
@@ -32,9 +33,12 @@ type RootStackParamList = {
   NewOrder: { item: string };
 };
 
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createStackNavigator<RootStackParamList>();
 
+
+// Main page: Bottom tab
 const HomeTabs = () => {
   const isDark = useTheme();
   return (
@@ -64,7 +68,7 @@ const HomeTabs = () => {
           return (
             <Icon
               name={iconName}
-              size={34}
+              size={30}
               color={color}
               style={{ marginBottom: -12 }}
             />

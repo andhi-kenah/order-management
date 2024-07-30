@@ -1,5 +1,18 @@
 import type {quantity} from '../Type';
 
+import moment from 'moment';
+
+export const getDeliveryLate = (date: string) => {
+  return moment(date, ['DD/MM/YYYY']).isBefore(moment().subtract(1, 'd'))
+}
+
+
+/**
+ * getDeliveryDate : Get the long date of delivery
+ * @param data 
+ * @param fullDate
+ * @returns string Date
+ */
 export const getDeliveryDate = (
   data: string,
   fullDate: string = 'short-date',
@@ -30,6 +43,11 @@ export const getDeliveryDate = (
   return '';
 };
 
+/**
+ * getTotal : Get the number of item per detail
+ * @param data Number of order
+ * @returns number
+ */
 export const getTotal = (data: quantity[]): number => {
   if (data) {
     let total = 0;
@@ -41,6 +59,11 @@ export const getTotal = (data: quantity[]): number => {
   return 0;
 };
 
+/**
+ * getDone : Get the number of item done
+ * @param data Number of order
+ * @returns number
+ */
 export const getDone = (data: quantity[]): number => {
   if (data) {
     let done = 0;

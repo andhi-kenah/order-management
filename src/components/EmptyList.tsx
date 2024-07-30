@@ -26,7 +26,7 @@ const EmptyList = ({ searchMode, searchValue }: Props) => {
               color: isDark ? DarkColor.Secondary : LightColor.Secondary,
               textAlign: 'center',
             }}>
-            Il n'y a pas de "{searchValue}" dans la liste de commande
+            {searchValue}
           </Text>
         </View>
       ) : (

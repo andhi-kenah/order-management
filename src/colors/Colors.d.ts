@@ -3,9 +3,10 @@ export interface color {
     BackgroundTwo: string,
     Text: string,
     Primary: string,
-    PrimaryTwo: string,
     Secondary: string,
     Danger: string,
+    DangerTwo: string,
     Success: string,
+    SuccessTwo: string,
     ComponentColor: string
 }

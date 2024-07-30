@@ -22,7 +22,7 @@ import firestore from '@react-native-firebase/firestore';
 import useTheme from '../../services/Theme';
 import { DarkColor, LightColor } from '../../colors/Colors';
 import FloatingButton from '../../components/FloatingButton';
-import { getDeliveryDate, getDone, getTotal } from '../../services/Functions';
+import { getDeliveryDate, getDeliveryLate, getDone, getTotal } from '../../services/Functions';
 
 type RootStackParamList = {
   CustomerDetail: { item: DataType };
@@ -55,6 +55,12 @@ const OrderDetail = ({ route, navigation }: Props) => {
   const [fullScreen, setFullScreen] = useState(false);
   const [isFinish, setFinish] = useState(false);
 
+  const [pendingQuantity, setPendingQuantity] = useState<number[]>([0,1]);
+
+
+  /**
+   * handleEdit : Edit the information of an order and push it to the database
+   */
   const handleEdit = async () => {
     if (isEdit) {
       let alsoEditDoneDetail = item.done
@@ -82,6 +88,9 @@ const OrderDetail = ({ route, navigation }: Props) => {
     }
   }
 
+  /**
+   * handleChange : increment or decrement the number of an order and push it to the database
+   */
   const handleChange = async () => {
     try {
       let newDone: quantity[] = [];
@@ -108,7 +117,9 @@ const OrderDetail = ({ route, navigation }: Props) => {
     }
   };
 
-
+  /**
+   * handleDelete : delete an order
+   */
   const handleDelete = () => {
     const deleteOrder = () => {
       firestore().collection('orders').doc(item.key).delete();
@@ -127,6 +138,9 @@ const OrderDetail = ({ route, navigation }: Props) => {
     )
   };
 
+  /**
+   * handleFinish : finish the order
+   */
   const handleFinish = () => {
     const finishOrder = () => {
       if (isFinish) {
@@ -178,7 +192,8 @@ const OrderDetail = ({ route, navigation }: Props) => {
     } else {
       setChange(false);
     }
-  }, [changeDone]);
+    console.log(pendingQuantity);
+  }, [changeDone, pendingQuantity]);
 
   const headerRight = () => {
     return (
@@ -306,13 +321,21 @@ const OrderDetail = ({ route, navigation }: Props) => {
         }
       };
 
-      const [bgColor, setBgColor] = useState(1)
+      const [bgColor, setBgColor] = useState(1);
       const removeQuantity = () => {
-        bgColor === 1
-          ? setBgColor(0.4)
-          : setBgColor(1)
-      }
-
+        if (bgColor === 1) {
+          setBgColor(0.4);
+          setPendingQuantity((prevState) => {
+            return prevState?.filter(value => value !== id)
+          });
+        } else {
+          setBgColor(1);
+          setPendingQuantity((prevState) => {
+            return prevState ? [...prevState, id] : [id];
+          });
+        };
+        // console.log(pendingQuantity);
+      };
 
       return (
         <View
@@ -330,7 +353,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 alignItems: 'center',
                 backgroundColor:
                   done >= quantity.number
-                    ? isDark ? '#e4f3e488' : '#e4f3e4'
+                    ? isDark ? DarkColor.SuccessTwo : LightColor.SuccessTwo
                     : isDark
                       ? DarkColor.ComponentColor
                       : LightColor.ComponentColor,
@@ -339,7 +362,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
               }}>
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   color: isDark ? DarkColor.Text : LightColor.Text,
                   verticalAlign: 'middle',
                   marginHorizontal: 4,
@@ -363,7 +386,7 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 defaultValue={quantity.number.toString()}
                 onChangeText={text => (quantity.number = parseInt(text))}
                 style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: 'bold',
                   color: isDark ? DarkColor.Text : LightColor.Text,
                   borderWidth: 1,
@@ -474,8 +497,8 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 ? DarkColor.BackgroundTwo
                 : LightColor.Background
               : isDark
-                ? DarkColor.PrimaryTwo
-                : LightColor.PrimaryTwo
+                ? DarkColor.Primary
+                : LightColor.Primary
           }}>
           {item.hasImage && (
             <TouchableOpacity
@@ -511,15 +534,15 @@ const OrderDetail = ({ route, navigation }: Props) => {
           {/* {item.localImage && <Image source={{ uri: item.localImage }} style={{ width: '100%', height: 280 }} />} */}
           {item.image && <Image source={{ uri: item.image }} style={{ width: '100%', height: 280 }} />}
         </View>
-        
+
         <View>
           <View style={{
-              backgroundColor: 
-                item.hasImage
-                  ? isDark ? DarkColor.BackgroundTwo : LightColor.Background
-                  : isDark ? DarkColor.PrimaryTwo : LightColor.PrimaryTwo,
-              paddingHorizontal: 16
-            }}>
+            backgroundColor:
+              item.hasImage
+                ? isDark ? DarkColor.BackgroundTwo : LightColor.Background
+                : isDark ? DarkColor.Primary : LightColor.Primary,
+            paddingHorizontal: 16
+          }}>
             <TextInput
               editable={isEdit}
               defaultValue={item.name}
@@ -568,8 +591,8 @@ const OrderDetail = ({ route, navigation }: Props) => {
                 color: item.hasImage
                   ? isDark ? DarkColor.Text : LightColor.Text
                   : DarkColor.Text,
-                }}>
-                  -
+              }}>
+                -
               </Text>
               <TextInput
                 editable={isEdit}
@@ -596,9 +619,12 @@ const OrderDetail = ({ route, navigation }: Props) => {
           </View>
 
           {
-            (isFinish || getTotal(item.quantity) === getDone(item.done)) &&
+            (isFinish || getTotal(item.quantity) === getDone(item.done) || getDeliveryLate(item.delivery)) &&
             <View style={{
-              backgroundColor: isDark ? DarkColor.Success : LightColor.Success,
+              backgroundColor:
+                !isFinish && getDeliveryLate(item.delivery)
+                  ? isDark ? DarkColor.Danger : LightColor.Danger
+                  : isDark ? DarkColor.Success : LightColor.Success,
               flexDirection: 'row',
               justifyContent: 'center',
               alignItems: 'center',
@@ -606,21 +632,26 @@ const OrderDetail = ({ route, navigation }: Props) => {
               paddingVertical: 4,
               margin: 'auto',
             }}>
-              <Icon name={'checkmark-circle'} size={22} color={isDark ? DarkColor.Text : LightColor.Background} />
+              <Icon
+                name={!isFinish && getDeliveryLate(item.delivery) ? 'close-circle' : 'checkmark-circle'}
+                size={22}
+                color={isDark ? DarkColor.Text : LightColor.Background}
+              />
               <Text style={{ color: isDark ? DarkColor.Text : LightColor.Background, fontSize: 18, fontWeight: 'bold', opacity: 0.9 }}>
-                Terminé
+                {!isFinish && getDeliveryLate(item.delivery) ? 'Tard' : 'Terminé'}
               </Text>
             </View>
+
           }
 
-          <View 
-            style={{ 
-              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background, 
+          <View
+            style={{
+              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
               paddingHorizontal: 16,
               paddingTop: 10,
               paddingBottom: 4,
               marginVertical: 14
-              }}>
+            }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -653,7 +684,6 @@ const OrderDetail = ({ route, navigation }: Props) => {
             })}
             <View style={{ alignItems: 'center' }}>
               <TouchableOpacity
-                // disabled={order.quantity.length > 9}
                 disabled={isEdit ? false : true}
                 activeOpacity={0.8}
                 style={{
@@ -686,7 +716,10 @@ const OrderDetail = ({ route, navigation }: Props) => {
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
+              backgroundColor:
+                (getDeliveryLate(item.delivery) && !isFinish)
+                  ? isDark ? DarkColor.DangerTwo : LightColor.DangerTwo
+                  : isDark ? DarkColor.BackgroundTwo : LightColor.Background,
               paddingHorizontal: 16,
               paddingVertical: 10,
               marginBottom: 14
@@ -725,10 +758,10 @@ const OrderDetail = ({ route, navigation }: Props) => {
             />
           </View>
           <View style={{
-              backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-            }}>
+            backgroundColor: isDark ? DarkColor.BackgroundTwo : LightColor.Background,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+          }}>
             <View
               style={{
                 flexDirection: 'row',

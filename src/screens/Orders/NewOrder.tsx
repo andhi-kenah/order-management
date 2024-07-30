@@ -55,16 +55,17 @@ const NewOrder = ({ route }: Props) => {
     isDone: false,
     isUrgent: false
   });
-  const [imageInfo, setImageInfo] = useState<{ asset: Asset[] | undefined, ref: string }>();
-  const [numberInput, setNumberInput] = useState<number[]>([Date.now()]);
+  const [imageInfo, setImageInfo] = useState<{ asset: Asset[] | undefined, ref: string }>(); // Image info
+  const [numberInput, setNumberInput] = useState<number[]>([Date.now()]); // 
 
-  const option: OptionsCommon = {
+  const option: OptionsCommon = { // Image setting
     mediaType: 'photo',
     maxHeight: 600,
     maxWidth: 600,
     quality: 0.6
   }
 
+  // Controller of Image Picker (Image lib)
   const selectImage = () => {
     launchImageLibrary(option, (res) => {
       if (res.didCancel) {
@@ -85,6 +86,7 @@ const NewOrder = ({ route }: Props) => {
     })
   }
 
+  // Controller of Image Picker (Camera)
   const takePhoto = () => {
     launchCamera(option, (res) => {
       if (res.didCancel) {
@@ -105,6 +107,9 @@ const NewOrder = ({ route }: Props) => {
     })
   }
 
+  /**
+   * showDatePicker : manipulate the date with moment.js
+   */
   const showDatePicker = () => {
     DateTimePickerAndroid.open({
       value: new Date(),
@@ -127,6 +132,7 @@ const NewOrder = ({ route }: Props) => {
     try {
       let downloadUrl: string = '';
       
+      // Controller of item's image
       if (order.hasImage && isConnected.isConnected) {
         const ref = storage().ref('images/' + imageInfo?.ref);
         const task = await ref.putFile(imageInfo?.asset?.[0].uri ? imageInfo.asset?.[0].uri : '');
@@ -152,7 +158,7 @@ const NewOrder = ({ route }: Props) => {
         downloadUrl = await storage().ref('images/' + imageInfo?.ref).getDownloadURL();
       }
 
-      
+      // push to the database
       firestore()
         .collection('orders')
         .add({
@@ -169,12 +175,16 @@ const NewOrder = ({ route }: Props) => {
           createdOn: order.createdOn,
           editedOn: order.editedOn,
         })
-      navigation.goBack();
+      navigation.goBack(); // Go back to the Main page
     } catch (err) {
       console.log(err);
     }
   };
 
+  /**
+   * addNewNumber : Add a new detail in quantity
+   * @returns components[]
+   */
   const addNewNumber = (): React.ReactNode => {
     return numberInput.map((key, index) => {
       const removeInmput = (key: number, index: number) => {

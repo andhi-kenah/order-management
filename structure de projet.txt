@@ -1,18 +1,32 @@
-Pages : {
-    - Connexion
-    - Liste des commandes
-    - Liste des clients
+[ ] Nom de l'application
+[X] Objectif de l'application
+[ ] Icone
+[X] Pris en charge hors ligne
+
+
+Platforme : {
+    [X] Android
+    [ ] iOS
+    [ ] Web (ReactJS)
+    [ ] Windows
 }
 
+Pages : {
+    [ ] Connexion
+    [X] Liste des commandes
+    [X] Liste des clients
+}
+    
+
 Fonctionnalités par page : {
-    - Connexion : {
+    [ ] Connexion : {
         - Logo
         - Entree (Adresse & Mot de passe)
         - Bouton
         - A propos (version, date de sortie)
     }
 
-    - Apres Connexion : {
+    [X] Apres Connexion : {
         -> Bottom-tabs pour la navigation : {
             - Liste des commandes
             - Nouvelle commande
@@ -20,24 +34,24 @@ Fonctionnalités par page : {
         }
     }
 
-    - Liste des commandes : {
-        - En tete : {
-            - Titre = <LOGO> + "Commandes"
-            - Bouton Droite = Parametre
+    [X] Liste des commandes : {
+        [-] En tete : {
+            [X] Titre = <LOGO> + "Commandes"
+            [ ] Bouton Droite = Parametre
         }
-        - Contenu : {
-            - Petit calendrier
-            - Entree de recherche
-            - Liste des commandes depuis la base de données (Voir le composant <Commande>) : {
+        [X] Contenu : {
+            [X] Date Picker
+            [X] Entree de recherche
+            [X] Liste des commandes depuis la base de données (Voir le composant <Commande>) : {
                 - onClick => (<ModalDetail>) Affiche le detail du commande
             }
         }
     }
 
     - Liste des clients : {
-        - En tete : {
-            - Titre = <LOGO> + "Clients"
-            - Bouton Droite = Parametre
+        [-] En tete : {
+            [X] Titre = <LOGO> + "Clients"
+            [ ] Bouton Droite = Parametre
         }
         - Contenu : {
             
@@ -50,25 +64,25 @@ Composant : {
         - Image (si existe)
         - Nom du produit
         - Nom du client
-        - Date de creation
         - Date de livraison
         - Nombre = Simplifié
         - Prix
+        - Description
     }
-    - <ModalDetail> : {
+    - <Page detail> : {
         - <Mode edition>
         - Image (si existe)
         - Nom du produit
         - Nom du client
-        - Date de creation
         - Date de livraison
         - Nombre = Detaillé : avec un bouton + et - {
             - Nombre Livré
             - Nombre Total
         }
         - Prix
+        - Description
     }
-    - <ModalNouveau> : {
+    - <Modal Nouvelle Commande> : {
         - Les entrees : {
             - Image (Image-Picker)
             - Nom du produit
@@ -81,6 +95,7 @@ Composant : {
             }
             - Prix
             - Date de livraison (OPTIONNEL)
+            - Description
         }
     }
 }
