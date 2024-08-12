@@ -50,7 +50,7 @@ Fonctionnalités par page : {
 
     - Liste des clients : {
         [-] En tete : {
-            [X] Titre = <LOGO> + "Clients"
+            [X] Titre = <LOGO> + "Client"
             [ ] Bouton Droite = Parametre
         }
         - Contenu : {
